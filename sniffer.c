@@ -35,7 +35,6 @@ int main(int argc, char *argv []) {
         eth_header* eh = prepare_ethernet_header(eth_pointer);
         describe_eth_header(eh);
         
-
         if (eh->type_code == 8) {
 
             packet ip_pointer = buffer + sizeof(eth_header);
@@ -49,26 +48,3 @@ int main(int argc, char *argv []) {
 
     return 0;
 }
-
-/*
-eth_header* ethernet_frame(byte_array data) {
-    eth_header* header = malloc(sizeof(eth_header));
-    memcpy(header, data, sizeof(eth_header));
-    header->type_code = htons(header->type_code);
-    return header;
-}
-
-ip_header* ip_frame(byte_array data) {
-    ip_header* header = malloc(sizeof(ip_header));
-    memcpy(header, data, sizeof(ip_header));
-    return header;
-}
-
-
-void print_eth_header(eth_header* header) {
-    printf("dest: ");
-    for (int i = 0; i < 6; i++)
-        printf("%04x", header->destination_host[i]);
-    printf("\n");
-}
-*/

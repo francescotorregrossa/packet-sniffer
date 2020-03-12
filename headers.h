@@ -40,5 +40,5 @@ ip_header* prepare_ip_header(packet data);
 string get_mac_address(byte address[6]);
 string get_ip_address(unsigned int address);
 
-string describe_eth_header(eth_header* header);
-string describe_ip_header(ip_header* ip_header);
+void describe_eth_header(eth_header* header);
+void describe_ip_header(ip_header* ip_header);
