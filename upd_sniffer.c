@@ -1,9 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #define PKT_LEN 8192 //lunghezza pacchetto
 int main()
 {
