@@ -39,11 +39,15 @@ int main(int argc, char *argv []) {
 
             packet ip_pointer = buffer + sizeof(eth_header);
             ip_header* iph = prepare_ip_header(ip_pointer);
+            describe_ip_header(iph);
 
+            free(iph);
         }
         else {
 
         }
+
+        free(eh);
     }
 
     return 0;
