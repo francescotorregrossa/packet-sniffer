@@ -3,8 +3,9 @@
 #include <string.h>
 #include <netinet/in.h>
 
-typedef char byte;
+typedef unsigned char byte;
 typedef unsigned short word;
+// typedef unsigned int dword;
 typedef byte *packet;
 typedef char *string;
 
@@ -12,14 +13,36 @@ typedef char *string;
 
 typedef struct
 {
+    
+    byte a;
+    byte b;
+    byte c;
+    byte d;
+    byte e;
+    byte f;
 
-    byte destination_host[6];
-    byte source_host[6];
+} mac_address;
+
+typedef struct
+{
+
+    mac_address destination_host;
+    mac_address source_host;
     word type_code;
 
 } eth_header;
 
 // IP Header
+
+typedef struct
+{
+
+    byte a;
+    byte b;
+    byte c;
+    byte d;
+
+} ip_address;
 
 typedef struct
 {
@@ -37,16 +60,16 @@ typedef struct
     byte protocol;
     word checksum;
 
-    byte source_address[4];
-    byte destination_address[4];
+    ip_address source_address;
+    ip_address destination_address;
 
 } ip_header;
 
 eth_header *prepare_ethernet_header(packet data);
 ip_header *prepare_ip_header(packet data);
 
-string get_mac_address(byte address[6]);
-string get_ip_address(byte address[4]);
+string get_mac_address(mac_address address);
+string get_ip_address(ip_address address);
 
 void describe_eth_header(eth_header *header);
 void describe_ip_header(ip_header *ip_header);

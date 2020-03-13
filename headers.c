@@ -14,57 +14,49 @@ ip_header *prepare_ip_header(packet data)
     return header;
 }
 
-string get_mac_address(byte address[6])
+string get_mac_address(mac_address address)
 {
     string output = malloc(18);
 
-    string pin = address;
-    string hex = "0123456789ABCDEF";
-    string pout = output;
-
-    for (int i = 0; i < 5; i++)
-    {
-        *pout++ = hex[(*pin >> 4) & 0xF];
-        *pout++ = hex[(*pin++) & 0xF];
-        *pout++ = ':';
-    }
-    *pout++ = hex[(*pin >> 4) & 0xF];
-    *pout++ = hex[(*pin) & 0xF];
-    *pout = 0;
+    sprintf(output,
+            "%02X:%02X:%02X:%02X:%02X:%02X",
+            address.a, address.b,
+            address.c, address.d,
+            address.e, address.f);
 
     output[17] = '\0';
     return output;
 }
 
-string get_ip_address(byte address[4])
+string get_ip_address(ip_address address)
 {
     int len = 8; // 3 dots + 4 numbers + \0
 
-    if (address[0] >= 10)
+    if (address.a >= 10)
         len++;
-    if (address[1] >= 10)
+    if (address.b >= 10)
         len++;
-    if (address[2] >= 10)
+    if (address.c >= 10)
         len++;
-    if (address[3] >= 10)
+    if (address.d >= 10)
         len++;
 
-    if (address[0] >= 100)
+    if (address.a >= 100)
         len++;
-    if (address[1] >= 100)
+    if (address.b >= 100)
         len++;
-    if (address[2] >= 100)
+    if (address.c >= 100)
         len++;
-    if (address[3] >= 100)
+    if (address.d >= 100)
         len++;
 
     string output = malloc(len);
 
     sprintf(output,
             "%d.%d.%d.%d",
-            address[0], address[1],
-            address[2], address[3]);
-
+            address.a, address.b,
+            address.c, address.d);
+    
     output[len - 1] = '\0';
     return output;
 }
