@@ -84,7 +84,7 @@ typedef struct
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 |  ihl  |  vers  | type of service |            total length          |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
-|          identification          | f|f|f|     fragment offset       |
+|          identification          | 0|d|m|     fragment offset       |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 |  time to live  |    protocol     |              checksum            |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
@@ -108,14 +108,16 @@ typedef struct
 typedef struct
 {
 
-    byte
-         header_length : 4,
+    byte header_length : 4,
          version : 4;
     byte type_of_service;
     word total_length;
 
     word id;
-    word fragment_offset;
+    word : 1,
+         flag_do_not_fragment : 1,
+         flag_more_fragments : 1,
+         fragment_offset;
 
     byte time_to_live;
     byte protocol;

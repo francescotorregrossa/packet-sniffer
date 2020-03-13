@@ -58,7 +58,10 @@ typedef struct
     word total_length;
 
     word id;
-    word fragment_offset;
+    word : 1,
+        flag_do_not_fragment : 1,
+        flag_more_fragments : 1,
+        fragment_offset;
 
     byte time_to_live;
     byte protocol;
