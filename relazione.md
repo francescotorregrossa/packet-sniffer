@@ -26,7 +26,7 @@ Ogni pacchetto di rete è stratificato, e ogni strato segue i suoi protocolli, c
 
 Di seguito riportiamo la schematizzazione e la struttura in C relativa ad ogni protocollo analizzato, tenendo conto dei seguenti alias, scritti per fare chiarezza sui dati 
 ```c
-typedef char byte;
+typedef unsigned char byte;
 typedef unsigned short word;
 typedef byte *packet;
 typedef char *string;
@@ -40,8 +40,20 @@ typedef char *string;
 typedef struct
 {
 
-    byte destination_host[6];
-    byte source_host[6];
+    byte a;
+    byte b;
+    byte c;
+    byte d;
+    byte e;
+    byte f;
+
+} mac_address;
+
+typedef struct
+{
+
+    mac_address destination_host;
+    mac_address source_host;
     word type_code;
 
 } eth_header;
@@ -55,7 +67,18 @@ typedef struct
 typedef struct
 {
 
-    byte header_length : 4,
+    byte a;
+    byte b;
+    byte c;
+    byte d;
+
+} ip_address;
+
+typedef struct
+{
+
+    byte
+         header_length : 4,
          version : 4;
     byte type_of_service;
     word total_length;
@@ -67,8 +90,8 @@ typedef struct
     byte protocol;
     word checksum;
 
-    byte source_address[4];
-    byte destination_address[4];
+    ip_address source_address;
+    ip_address destination_address;
 
 } ip_header;
 ```

@@ -56,7 +56,7 @@ string get_ip_address(ip_address address)
             "%d.%d.%d.%d",
             address.a, address.b,
             address.c, address.d);
-    
+
     output[len - 1] = '\0';
     return output;
 }
