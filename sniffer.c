@@ -32,15 +32,13 @@ int main(int argc, char *argv[])
     while (read(sock, buffer, PKT_LEN) > 0)
     {
 
-        packet eth_pointer = buffer;
-        eth_header *eh = prepare_ethernet_header(eth_pointer);
+        eth_header *eh = prepare_ethernet_header(buffer);
         describe_eth_header(eh);
 
         if (eh->type_code == 8)
         {
 
-            packet ip_pointer = buffer + sizeof(eth_header);
-            ip_header *iph = prepare_ip_header(ip_pointer);
+            ip_header *iph = prepare_ip_header(eh->next);
             describe_ip_header(iph);
 
             free(iph);

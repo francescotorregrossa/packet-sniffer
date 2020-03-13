@@ -56,6 +56,8 @@ typedef struct
     mac_address source_host;
     word type_code;
 
+    packet next;
+
 } eth_header;
 ```
 
@@ -92,6 +94,8 @@ typedef struct
 
     ip_address source_address;
     ip_address destination_address;
+
+    packet next;
 
 } ip_header;
 ```

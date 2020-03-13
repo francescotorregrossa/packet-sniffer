@@ -10,6 +10,8 @@ typedef char *string;
 
 // Ethernet Header
 
+#define ETH_HEADER_SIZE 14
+
 typedef struct
 {
 
@@ -29,9 +31,13 @@ typedef struct
     mac_address source_host;
     word type_code;
 
+    packet next;
+
 } eth_header;
 
 // IP Header
+
+#define IP_HEADER_SIZE 20
 
 typedef struct
 {
@@ -61,6 +67,8 @@ typedef struct
 
     ip_address source_address;
     ip_address destination_address;
+
+    packet next;
 
 } ip_header;
 
