@@ -2,15 +2,18 @@
 
 eth_header *prepare_ethernet_header(packet data)
 {
-    eth_header *header = malloc(sizeof(eth_header));
-    memcpy(header, data, sizeof(eth_header));
+    eth_header *header = malloc(ETH_HEADER_SIZE);
+    memcpy(header, data, ETH_HEADER_SIZE);
+    header->next = header + ETH_HEADER_SIZE;
     return header;
 }
 
 ip_header *prepare_ip_header(packet data)
 {
-    ip_header *header = malloc(sizeof(ip_header));
-    memcpy(header, data, sizeof(ip_header));
+    ip_header *header = malloc(IP_HEADER_SIZE);
+    memcpy(header, data, IP_HEADER_SIZE);
+    // header->next = header + IP_HEADER_SIZE;
+    header->next = NULL;
     return header;
 }
 
@@ -30,7 +33,7 @@ string get_mac_address(mac_address address)
 
 string get_ip_address(ip_address address)
 {
-    int len = 8; // 3 dots + 4 numbers + \0
+    int len = 8;
 
     if (address.a >= 10)
         len++;
