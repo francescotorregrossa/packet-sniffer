@@ -32,7 +32,7 @@ typedef struct
 
     packet next;
 
-} eth_header;
+} * eth_header;
 
 // IP Header
 
@@ -72,13 +72,13 @@ typedef struct
 
     packet next;
 
-} ip_header;
+} * ip_header;
 
-eth_header *prepare_ethernet_header(packet data);
-ip_header *prepare_ip_header(packet data);
+eth_header prepare_ethernet_header(packet data);
+ip_header prepare_ip_header(packet data);
 
 string get_mac_address(mac_address address);
 string get_ip_address(ip_address address);
 
-void describe_eth_header(eth_header *header);
-void describe_ip_header(ip_header *ip_header);
+void describe_eth_header(eth_header header);
+void describe_ip_header(ip_header ip_header);

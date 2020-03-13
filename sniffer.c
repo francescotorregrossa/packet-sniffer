@@ -10,6 +10,8 @@
 #define MAGIC1 65536
 #define MAGIC2 768
 
+void analyze(packet buffer);
+
 int main(int argc, char *argv[])
 {
 
@@ -21,25 +23,27 @@ int main(int argc, char *argv[])
         perror("Errore socket()");
 
     while (read(sock, buffer, PKT_LEN) > 0)
-    {
-
-        eth_header *eh = prepare_ethernet_header(buffer);
-        describe_eth_header(eh);
-
-        if (eh->type_code == 8)
-        {
-
-            ip_header *iph = prepare_ip_header(eh->next);
-            describe_ip_header(iph);
-
-            free(iph);
-        }
-        else
-        {
-        }
-
-        free(eh);
-    }
+        analyze(buffer);
 
     return 0;
+}
+
+void analyze(packet buffer)
+{
+    eth_header eh = prepare_ethernet_header(buffer);
+    describe_eth_header(eh);
+
+    if (eh->type_code == 8)
+    {
+
+        ip_header iph = prepare_ip_header(eh->next);
+        describe_ip_header(iph);
+
+        free(iph);
+    }
+    else
+    {
+    }
+
+    free(eh);
 }

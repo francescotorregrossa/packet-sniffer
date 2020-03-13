@@ -1,16 +1,16 @@
 #include "headers.h"
 
-eth_header *prepare_ethernet_header(packet data)
+eth_header prepare_ethernet_header(packet data)
 {
-    eth_header *header = malloc(ETH_HEADER_SIZE);
+    eth_header header = malloc(ETH_HEADER_SIZE);
     memcpy(header, data, ETH_HEADER_SIZE);
     header->next = header + ETH_HEADER_SIZE;
     return header;
 }
 
-ip_header *prepare_ip_header(packet data)
+ip_header prepare_ip_header(packet data)
 {
-    ip_header *header = malloc(IP_HEADER_SIZE);
+    ip_header header = malloc(IP_HEADER_SIZE);
     memcpy(header, data, IP_HEADER_SIZE);
     // header->next = header + IP_HEADER_SIZE;
     header->next = NULL;
@@ -64,7 +64,7 @@ string get_ip_address(ip_address address)
     return output;
 }
 
-void describe_eth_header(eth_header *header)
+void describe_eth_header(eth_header header)
 {
     string dh = get_mac_address(header->destination_host);
     string sh = get_mac_address(header->source_host);
@@ -76,7 +76,7 @@ void describe_eth_header(eth_header *header)
     free(sh);
 }
 
-void describe_ip_header(ip_header *header)
+void describe_ip_header(ip_header header)
 {
     string dh = get_ip_address(header->destination_address);
     string sh = get_ip_address(header->source_address);

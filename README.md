@@ -11,21 +11,18 @@ Successivamente, abbiamo caricato il programma su un dispositivo [OrangePi](http
 
 Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di alcuni pacchetti che sono poi stati analizzati dal nostro programma, attivo sull'OrangePi. Questo ci ha permesso di accedere ai dati sensibili e di verificare la correttezza delle informazioni ottenute dal programma stesso.
 
+- [Sviluppo del programma](#sviluppo-del-programma)
+    - [Protocolli e strutture dati](#protocolli-e-strutture-dati)
+        - [Ethernet](#ethernet)
+        - [IP](#ip)
+        - [TCP](#tcp)
+        - [UPD](#udp)
+    - [Realizzazione dello sniffer](#realizzazione-dello-sniffer)
+- [Preparazione dell'OrangePi](#preparazione-dellorangepi)
+- [Sviluppo del sito web](#sviluppo-del-sito-web)
+- [Prova](#prova)
 
 ## Sviluppo del programma
-
-Per realizzare il programma abbiamo fatto uso delle seguenti librerie:
-
-- `sys/socket.h` per richiedere al sistema la creazione di una socket tramite 
-    ```c
-    socket(AF_PACKET, SOCK_RAW, MAGIC2);
-    ```
-
-- `unistd.h` per leggere i contenuti della socket
-    ```c
-    read(sock, buffer, PKT_LEN);
-    ```
-
 
 ### Protocolli e strutture dati
 
@@ -75,7 +72,7 @@ typedef struct
 
     packet next;  // puntatore al pacchetto incapsulato
 
-} eth_header;
+} * eth_header;
 ```
 
 #### IP
@@ -128,7 +125,7 @@ typedef struct
 
     packet next;
 
-} ip_header;
+} * ip_header;
 ```
 
 #### TCP
@@ -147,6 +144,64 @@ typedef struct
 
 Tutto ciò è stato raccolto all'interno del file `headers.h`, accompagnato da alcuni metodi di utilità scritti in `headers.c`. Questi metodi includono, per esempio, la conversione in stringa degli indirizzi `MAC` e di quelli `IP`.
 
+Oltre ai normali contenuti di ogni pacchetto, le strutture `eth_header` e `ip_header` contengono un puntatore `next` che permette di raggiungere facilmente l'inizio del pacchetto incapsulato.
+
+- **todo** non so se serve tenere il pezzo di dopo
+
+Sicuramente i metodi più importanti sono quelli dedicati ad istanziare le strutture dati, come quello seguente che mostra la preparazione di una struttura `eth_header`, relativa al protocollo [ethernet](#ethernet)
+```c
+eth_header prepare_ethernet_header(packet data)
+{
+    eth_header header = malloc(ETH_HEADER_SIZE);
+    memcpy(header, data, ETH_HEADER_SIZE);
+    header->next = header + ETH_HEADER_SIZE;
+    return header;
+}
+```
+
+
+### Realizzazione dello sniffer
+
+Per realizzare il programma abbiamo fatto uso delle seguenti librerie:
+
+- `sys/socket.h` per richiedere al sistema la creazione di una socket tramite 
+    ```c
+    int sock = socket(AF_PACKET, SOCK_RAW, MAGIC2);
+    if (sock < 0)
+        perror("Socket creation error");
+    ```
+
+- `unistd.h` per leggere i contenuti della socket
+    ```c
+    while (read(sock, buffer, PKT_LEN) > 0)
+        analyze(buffer);
+    ```
+
+- **todo** spiegare i parametri magici
+
+Ogni volta che arriva un pacchetto qualsiasi, esso viene analizzato e scomposto utilizzando le funzioni e le strutture relative ai vari protocolli, a partire da quello [ethernet](#ethernet).
+
+```c
+void analyze(packet buffer)
+{
+    eth_header eh = prepare_ethernet_header(buffer);
+    describe_eth_header(eh);
+
+    if (eh->type_code == 8)
+    {
+
+        ip_header iph = prepare_ip_header(eh->next);
+        describe_ip_header(iph);
+
+        free(iph);
+    }
+    else
+    {
+    }
+
+    free(eh);
+}
+```
 
 ## Preparazione dell'OrangePi
 
