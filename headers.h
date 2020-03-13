@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <netinet/in.h>
 
 typedef unsigned char byte;
 typedef unsigned short word;

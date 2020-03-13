@@ -1,17 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
-
-#include <netinet/ether.h>
-/*
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-#include <netinet/in.h>
-*/
-#include <arpa/inet.h>
 
 #include "headers.h"
 
