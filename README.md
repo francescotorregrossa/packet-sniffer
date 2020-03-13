@@ -16,9 +16,16 @@ Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di a
 
 Per realizzare il programma abbiamo fatto uso delle seguenti librerie:
 
-- `netinet/in.h` non sono sicuro che la stiamo usando veramente per ora
-- `sys/socket.h` per richiedere al sistema la creazione di una socket
-- `arpa/inet.h` non sono sicuro che la stiamo usando veramente per ora
+- `sys/socket.h` per richiedere al sistema la creazione di una socket tramite 
+    ```c
+    socket(AF_PACKET, SOCK_RAW, MAGIC2);
+    ```
+
+- `unistd.h` per leggere i contenuti della socket
+    ```c
+    read(sock, buffer, PKT_LEN);
+    ```
+
 
 ### Protocolli e strutture dati
 
@@ -56,7 +63,7 @@ typedef struct
     mac_address source_host;
     word type_code;
 
-    packet next;
+    packet next;  // puntatore al pacchetto incapsulato
 
 } eth_header;
 ```
