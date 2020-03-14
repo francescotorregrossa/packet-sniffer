@@ -14,25 +14,21 @@ typedef char *string;
 
 typedef struct
 {
-
     byte a;
     byte b;
     byte c;
     byte d;
     byte e;
     byte f;
-
 } mac_address;
 
 typedef struct
 {
-
     mac_address destination_host;
     mac_address source_host;
     word type_code;
 
     packet next;
-
 } * eth_header;
 
 // IP Header
@@ -41,17 +37,14 @@ typedef struct
 
 typedef struct
 {
-
     byte a;
     byte b;
     byte c;
     byte d;
-
 } ip_address;
 
 typedef struct
 {
-
     byte
         header_length : 4,
         version : 4;
@@ -72,7 +65,6 @@ typedef struct
     ip_address destination_address;
 
     packet next;
-
 } * ip_header;
 
 // ICMP Header
@@ -109,13 +101,16 @@ typedef struct
 {
     word source_port;
     word destination_port;
+
     dword sequence_number;
     dword acknowldge_number;
+
     byte
         data_offset : 4,
         : 4;
     tcp_flags flags;
     word windows_size;
+
     word checksum;
     word urgent;
 
@@ -130,6 +125,7 @@ typedef struct
 {
     word source_port;
     word destination_port;
+
     word length;
     word checksum;
 
