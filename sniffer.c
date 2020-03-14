@@ -38,6 +38,17 @@ void analyze(packet buffer)
 
         ip_header iph = prepare_ip_header(eh->next);
         describe_ip_header(iph);
+        
+        if (iph->protocol == 1)
+        {
+            icmp_header icmph = prepare_icmp_header(iph->next);
+            describe_icmp_header(icmph);
+        }
+        else if(iph->protocol == 6)
+        {
+            
+        }
+
 
         free(iph);
     }
