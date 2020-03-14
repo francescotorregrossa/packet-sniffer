@@ -45,32 +45,32 @@ void analyze(packet buffer)
         {
             icmp_header icmph = prepare_icmp_header(iph->next);
             describe_icmp_header(icmph);
-            free(icmph);
+            free_icmp_header(icmph);
             break;
         }
         case 6:
         {
             tcp_header tcph = prepare_tcp_header(iph->next);
             describe_tcp_header(tcph);
-            free(tcph);
+            free_tcp_header(tcph);
             break;
         }
         case 17:
         {
             udp_header udph = prepare_udp_header(iph->next);
             describe_udp_header(udph);
-            free(udph);
+            free_udp_header(udph);
             break;
         }
         default:
             break;
         }
         
-        free(iph);
+        free_ip_header(iph);
     }
     else
     {
     }
 
-    free(eh);
+    free_eth_header(eh);
 }

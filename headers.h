@@ -22,14 +22,16 @@ typedef struct
     byte f;
 } mac_address;
 
-typedef struct
+struct eth_header
 {
     mac_address destination_host;
     mac_address source_host;
     word type_code;
 
     packet next;
-} * eth_header;
+};
+
+typedef struct eth_header * eth_header;
 
 // IP Header
 
@@ -43,7 +45,7 @@ typedef struct
     byte d;
 } ip_address;
 
-typedef struct
+struct ip_header
 {
     byte
         header_length : 4,
@@ -64,21 +66,29 @@ typedef struct
     ip_address source_address;
     ip_address destination_address;
 
+    void* options;
+
     packet next;
-} * ip_header;
+};
+
+typedef struct ip_header * ip_header;
 
 // ICMP Header
 
-#define ICMP_HEADER_SIZE 8 ///////magic header
+#define ICMP_HEADER_SIZE 8
 
-typedef struct
+struct icmp_header
 {
     byte type;
     byte code;
     word checksum;
 
+    dword options;
+
     packet next;
-} * icmp_header;
+};
+
+typedef struct icmp_header * icmp_header;
 
 // TCP Header
 
@@ -97,7 +107,7 @@ typedef struct
         fin : 1;
 } tcp_flags;
 
-typedef struct
+struct tcp_header
 {
     word source_port;
     word destination_port;
@@ -105,23 +115,26 @@ typedef struct
     dword sequence_number;
     dword acknowldge_number;
 
-    byte
-        data_offset : 4,
-        : 4;
+    byte : 4,
+        data_offset: 4;
     tcp_flags flags;
     word windows_size;
 
     word checksum;
     word urgent;
 
+    void* options;
+
     packet next;
-} * tcp_header;
+};
+
+typedef struct tcp_header * tcp_header;
 
 // UDP Header
 
 #define UDP_HEADER_SIZE 8
 
-typedef struct
+struct udp_header
 {
     word source_port;
     word destination_port;
@@ -130,7 +143,9 @@ typedef struct
     word checksum;
 
     packet next;
-} * udp_header;
+};
+
+typedef struct udp_header * udp_header;
 
 eth_header prepare_ethernet_header(packet data);
 ip_header prepare_ip_header(packet data);
@@ -146,3 +161,9 @@ void describe_ip_header(ip_header ip_header);
 void describe_icmp_header(icmp_header ip_header);
 void describe_tcp_header(tcp_header tcp_header);
 void describe_udp_header(udp_header udp_header);
+
+void free_eth_header(eth_header header);
+void free_ip_header(ip_header header);
+void free_icmp_header(icmp_header header);
+void free_tcp_header(tcp_header header);
+void free_udp_header(udp_header header);

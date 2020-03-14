@@ -2,7 +2,7 @@
 
 eth_header prepare_ethernet_header(packet data)
 {
-    eth_header header = malloc(ETH_HEADER_SIZE + sizeof(packet));
+    eth_header header = malloc(sizeof(struct eth_header));
     memcpy(header, data, ETH_HEADER_SIZE);
     header->next = data + ETH_HEADER_SIZE;
     return header;
@@ -10,15 +10,26 @@ eth_header prepare_ethernet_header(packet data)
 
 ip_header prepare_ip_header(packet data)
 {
-    ip_header header = malloc(IP_HEADER_SIZE + sizeof(packet));
+    ip_header header = malloc(sizeof(struct ip_header));
     memcpy(header, data, IP_HEADER_SIZE);
-    header->next = data + header->header_length * 4;
+    
+    unsigned int options_length = header->header_length * 4 - IP_HEADER_SIZE;
+    if (options_length) 
+    {
+        header->options = malloc(options_length);
+        memcpy(header->options, data + IP_HEADER_SIZE, options_length);
+    }
+    else
+        header->options = NULL;
+
+    header->next = data + IP_HEADER_SIZE + options_length;
+
     return header;
 }
 
 icmp_header prepare_icmp_header(packet data)
 {
-    icmp_header header = malloc(ICMP_HEADER_SIZE + sizeof(packet));
+    icmp_header header = malloc(sizeof(struct icmp_header));
     memcpy(header, data, ICMP_HEADER_SIZE);
     header->next = data + ICMP_HEADER_SIZE;
     return header;
@@ -26,15 +37,26 @@ icmp_header prepare_icmp_header(packet data)
 
 tcp_header prepare_tcp_header(packet data)
 {
-    tcp_header header = malloc(TCP_HEADER_SIZE + sizeof(packet));
+    tcp_header header = malloc(sizeof(struct tcp_header));
     memcpy(header, data, TCP_HEADER_SIZE);
-    header->next = data + header->data_offset * 4;
+    
+    unsigned int options_length = header->data_offset * 4 - TCP_HEADER_SIZE;
+    if (options_length) 
+    {
+        header->options = malloc(options_length);
+        memcpy(header->options, data + TCP_HEADER_SIZE, options_length);
+    }
+    else
+        header->options = NULL;
+
+    header->next = data + TCP_HEADER_SIZE + options_length;
+
     return header;
 }
 
 udp_header prepare_udp_header(packet data)
 {
-    udp_header header = malloc(UDP_HEADER_SIZE + sizeof(packet));
+    udp_header header = malloc(sizeof(struct udp_header));
     memcpy(header, data, TCP_HEADER_SIZE);
     header->next = data + UDP_HEADER_SIZE;
     return header;
@@ -131,4 +153,32 @@ void describe_udp_header(udp_header header)
 {
     printf("\t\tUDP Header:\n");
     printf("\t\t\t- Source Port: %hu, Destination Port: %hu, Length: %u\n", header->source_port, header->destination_port, header->length);
+}
+
+
+void free_eth_header(eth_header header)
+{
+    free(header);
+}
+
+void free_ip_header(ip_header header)
+{
+    free(header->options);
+    free(header);
+}
+
+void free_icmp_header(icmp_header header)
+{
+    free(header);
+}
+
+void free_tcp_header(tcp_header header)
+{
+    free(header->options);
+    free(header);
+}
+
+void free_udp_header(udp_header header)
+{
+    free(header);
 }
