@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
 void analyze(packet buffer)
 {
-    eth_header eh = prepare_ethernet_header(buffer);
+    eth_header eh = prepare_eth_header(buffer);
     describe_eth_header(eh);
 
     if (eh->type_code == 8)

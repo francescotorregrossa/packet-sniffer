@@ -1,6 +1,6 @@
 #include "ethernet.h"
 
-eth_header prepare_ethernet_header(packet data)
+eth_header prepare_eth_header(packet data)
 {
   eth_header header = malloc(sizeof(struct eth_header));
   memcpy(header, data, ETH_HEADER_SIZE);
