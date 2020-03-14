@@ -4,7 +4,7 @@ eth_header prepare_ethernet_header(packet data)
 {
     eth_header header = malloc(ETH_HEADER_SIZE + sizeof(packet));
     memcpy(header, data, ETH_HEADER_SIZE);
-    header->next = header + ETH_HEADER_SIZE;
+    header->next = data + ETH_HEADER_SIZE;
     return header;
 }
 
@@ -12,7 +12,7 @@ ip_header prepare_ip_header(packet data)
 {
     ip_header header = malloc(IP_HEADER_SIZE + sizeof(packet));
     memcpy(header, data, IP_HEADER_SIZE);
-    header->next = header + header->header_length * 4;
+    header->next = data + header->header_length * 4;
     return header;
 }
 
@@ -20,7 +20,7 @@ icmp_header prepare_icmp_header(packet data)
 {
     icmp_header header = malloc(ICMP_HEADER_SIZE + sizeof(packet));
     memcpy(header, data, ICMP_HEADER_SIZE);
-    header->next = header + ICMP_HEADER_SIZE;
+    header->next = data + ICMP_HEADER_SIZE;
     return header;
 }
 
@@ -28,7 +28,7 @@ tcp_header prepare_tcp_header(packet data)
 {
     tcp_header header = malloc(TCP_HEADER_SIZE + sizeof(packet));
     memcpy(header, data, TCP_HEADER_SIZE);
-    header->next = header + header->data_offset * 4;
+    header->next = data + header->data_offset * 4;
     return header;
 }
 
@@ -97,7 +97,8 @@ void describe_ip_header(ip_header header)
     string sh = get_ip_address(header->source_address);
 
     printf("\tIP Header:\n");
-    printf("\t\t- Destination: %s, Source: %s\n", dh, sh);
+    printf("\t\t- Destination: %s, Source: %s, Protocol: %d\n", dh, sh, header->protocol);
+    printf("\t\t- Version: %d, Header Length: %d, TTL: %d\n", header->version, header->header_length, header->time_to_live);
 
     free(dh);
     free(sh);
@@ -105,14 +106,14 @@ void describe_ip_header(ip_header header)
 
 void describe_icmp_header(icmp_header header)
 {
-    printf("\tICMP Header:\n");
-    printf("\t\t- Type: %s, Code: %s\n", header->type, header->code);
+    printf("\t\tICMP Header:\n");
+    printf("\t\t\t- Type: %d, Code: %d\n", header->type, header->code);
 }
 
-void describe_icmp_header(tcp_header header)
+void describe_tcp_header(tcp_header header)
 {
-    printf("\tTCP Header:\n");
-    printf("\t\t- Source Port: %s, Destination Port: %s\n", header->source_port, header->destination_port);
-    printf("\t\t- Sequence Number: %s, Acknowledgment: %sn\n", header->sequence_number, header->acknowldge_number);
-    printf("\t\t- URG: %s, ACK: %s, FIN: %s\n", header->flags.urg, header->flags.ack, header->flags.fin);
+    printf("\t\tTCP Header:\n");
+    printf("\t\t\t- Source Port: %hu, Destination Port: %hu\n", header->source_port, header->destination_port);
+    printf("\t\t\t- Sequence Number: %u, Acknowledgment: %u\n", header->sequence_number, header->acknowldge_number);
+    printf("\t\t\t- URG: %u, ACK: %u, FIN: %u\n", header->flags.urg, header->flags.ack, header->flags.fin);
 }

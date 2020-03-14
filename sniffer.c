@@ -43,10 +43,13 @@ void analyze(packet buffer)
         {
             icmp_header icmph = prepare_icmp_header(iph->next);
             describe_icmp_header(icmph);
+            free(icmph);
         }
         else if(iph->protocol == 6)
         {
-            
+            tcp_header tcph = prepare_tcp_header(iph->next);
+            describe_tcp_header(tcph);
+            free(tcph);
         }
 
 

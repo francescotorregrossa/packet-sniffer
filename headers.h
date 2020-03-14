@@ -62,7 +62,7 @@ typedef struct
     word : 1,
         flag_do_not_fragment : 1,
         flag_more_fragments : 1,
-        fragment_offset;
+        fragment_offset : 13;
 
     byte time_to_live;
     byte protocol;
