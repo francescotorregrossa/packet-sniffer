@@ -145,8 +145,8 @@ void describe_tcp_header(tcp_header header)
     printf("\t\tTCP Header:\n");
     printf("\t\t\t- Source Port: %hu, Destination Port: %hu\n", header->source_port, header->destination_port);
     printf("\t\t\t- Sequence Number: %u, Acknowledgment: %u\n", header->sequence_number, header->acknowldge_number);
-    printf("\t\t\t- URG: %u, ACK: %u, PSH: %u\n", header->flags.urg, header->flags.ack, header->flags.psh);
-    printf("\t\t\t- RST: %u, SYN: %u, FIN: %u\n", header->flags.rst, header->flags.syn, header->flags.fin);
+    printf("\t\t\t- CWR: %u, ECE: %u, URG: %u, ACK: %u\n", header->flags.cwr, header->flags.ece, header->flags.urg, header->flags.ack);
+    printf("\t\t\t- PSH: %u, RST: %u, SYN: %u, FIN: %u\n", header->flags.psh, header->flags.rst, header->flags.syn, header->flags.fin);
 }
 
 void describe_udp_header(udp_header header)
@@ -163,7 +163,8 @@ void free_eth_header(eth_header header)
 
 void free_ip_header(ip_header header)
 {
-    free(header->options);
+    if (header->options != NULL)
+        free(header->options);
     free(header);
 }
 
@@ -174,7 +175,8 @@ void free_icmp_header(icmp_header header)
 
 void free_tcp_header(tcp_header header)
 {
-    free(header->options);
+    if (header->options != NULL)
+        free(header->options);
     free(header);
 }
 
