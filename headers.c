@@ -2,7 +2,7 @@
 
 eth_header prepare_ethernet_header(packet data)
 {
-    eth_header header = malloc(ETH_HEADER_SIZE);
+    eth_header header = malloc(ETH_HEADER_SIZE + sizeof(packet));
     memcpy(header, data, ETH_HEADER_SIZE);
     header->next = header + ETH_HEADER_SIZE;
     return header;
@@ -10,9 +10,25 @@ eth_header prepare_ethernet_header(packet data)
 
 ip_header prepare_ip_header(packet data)
 {
-    ip_header header = malloc(IP_HEADER_SIZE);
+    ip_header header = malloc(IP_HEADER_SIZE + sizeof(packet));
     memcpy(header, data, IP_HEADER_SIZE);
-    header->next = header + IP_HEADER_SIZE;
+    header->next = header + header->header_length * 4;
+    return header;
+}
+
+icmp_header prepare_icmp_header(packet data)
+{
+    icmp_header header = malloc(ICMP_HEADER_SIZE + sizeof(packet));
+    memcpy(header, data, ICMP_HEADER_SIZE);
+    header->next = header + ICMP_HEADER_SIZE;
+    return header;
+}
+
+tcp_header prepare_tcp_header(packet data)
+{
+    tcp_header header = malloc(TCP_HEADER_SIZE + sizeof(packet));
+    memcpy(header, data, TCP_HEADER_SIZE);
+    header->next = header + header->data_offset * 4;
     return header;
 }
 
@@ -85,4 +101,18 @@ void describe_ip_header(ip_header header)
 
     free(dh);
     free(sh);
+}
+
+void describe_icmp_header(icmp_header header)
+{
+    printf("\tICMP Header:\n");
+    printf("\t\t- Type: %s, Code: %s\n", header->type, header->code);
+}
+
+void describe_icmp_header(tcp_header header)
+{
+    printf("\tTCP Header:\n");
+    printf("\t\t- Source Port: %s, Destination Port: %s\n", header->source_port, header->destination_port);
+    printf("\t\t- Sequence Number: %s, Acknowledgment: %sn\n", header->sequence_number, header->acknowldge_number);
+    printf("\t\t- URG: %s, ACK: %s, FIN: %s\n", header->flags.urg, header->flags.ack, header->flags.fin);
 }
