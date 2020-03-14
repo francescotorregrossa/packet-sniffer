@@ -1,10 +1,4 @@
-#include <stdlib.h>
-
-typedef unsigned char byte;
-typedef unsigned short word;
-typedef unsigned int dword;
-typedef byte *packet;
-typedef char *string;
+#include "datatypes.h"
 
 word switch_encoding(word w)
 {

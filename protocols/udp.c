@@ -21,7 +21,7 @@ typedef struct udp_header *udp_header;
 udp_header prepare_udp_header(packet data)
 {
     udp_header header = malloc(sizeof(struct udp_header));
-    memcpy(header, data, TCP_HEADER_SIZE);
+    memcpy(header, data, UDP_HEADER_SIZE);
     header->next = data + UDP_HEADER_SIZE;
 
     header->source_port = switch_encoding(header->source_port);
