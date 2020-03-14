@@ -75,11 +75,12 @@ typedef struct
 
 } * ip_header;
 
-//ICMP
+// ICMP Header
 
 #define ICMP_HEADER_SIZE 8 ///////magic header
 
-typedef struct {
+typedef struct
+{
     byte type;
     byte code;
     word checksum;
@@ -87,12 +88,13 @@ typedef struct {
     packet next;
 } * icmp_header;
 
-//TCP
+// TCP Header
 
 #define TCP_HEADER_SIZE 20
 
-typedef struct {
-    byte 
+typedef struct
+{
+    byte
         cwr : 1,
         ece : 1,
         urg : 1,
@@ -103,14 +105,15 @@ typedef struct {
         fin : 1;
 } tcp_flags;
 
-typedef struct {
+typedef struct
+{
     word source_port;
     word destination_port;
     dword sequence_number;
     dword acknowldge_number;
-    byte 
+    byte
         data_offset : 4,
-         : 4;
+        : 4;
     tcp_flags flags;
     word windows_size;
     word checksum;
@@ -119,10 +122,25 @@ typedef struct {
     packet next;
 } * tcp_header;
 
+// UDP Header
+
+#define UDP_HEADER_SIZE 8
+
+typedef struct
+{
+    word source_port;
+    word destination_port;
+    word length;
+    word checksum;
+
+    packet next;
+} * udp_header;
+
 eth_header prepare_ethernet_header(packet data);
 ip_header prepare_ip_header(packet data);
 icmp_header prepare_icmp_header(packet data);
 tcp_header prepare_tcp_header(packet data);
+udp_header prepare_udp_header(packet data);
 
 string get_mac_address(mac_address address);
 string get_ip_address(ip_address address);
@@ -131,3 +149,4 @@ void describe_eth_header(eth_header header);
 void describe_ip_header(ip_header ip_header);
 void describe_icmp_header(icmp_header ip_header);
 void describe_tcp_header(tcp_header tcp_header);
+void describe_udp_header(udp_header udp_header);

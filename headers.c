@@ -32,6 +32,14 @@ tcp_header prepare_tcp_header(packet data)
     return header;
 }
 
+udp_header prepare_udp_header(packet data)
+{
+    udp_header header = malloc(UDP_HEADER_SIZE + sizeof(packet));
+    memcpy(header, data, TCP_HEADER_SIZE);
+    header->next = data + UDP_HEADER_SIZE;
+    return header;
+}
+
 string get_mac_address(mac_address address)
 {
     string output = malloc(18);
@@ -115,5 +123,12 @@ void describe_tcp_header(tcp_header header)
     printf("\t\tTCP Header:\n");
     printf("\t\t\t- Source Port: %hu, Destination Port: %hu\n", header->source_port, header->destination_port);
     printf("\t\t\t- Sequence Number: %u, Acknowledgment: %u\n", header->sequence_number, header->acknowldge_number);
-    printf("\t\t\t- URG: %u, ACK: %u, FIN: %u\n", header->flags.urg, header->flags.ack, header->flags.fin);
+    printf("\t\t\t- URG: %u, ACK: %u, PSH: %u\n", header->flags.urg, header->flags.ack, header->flags.psh);
+    printf("\t\t\t- RST: %u, SYN: %u, FIN: %u\n", header->flags.rst, header->flags.syn, header->flags.fin);
+}
+
+void describe_udp_header(udp_header header)
+{
+    printf("\t\tUDP Header:\n");
+    printf("\t\t\t- Source Port: %hu, Destination Port: %hu, Length: %u\n", header->source_port, header->destination_port, header->length);
 }
