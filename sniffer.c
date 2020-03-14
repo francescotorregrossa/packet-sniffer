@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include "./protocols/ethernet.c"
-#include "./protocols/ip.c"
-#include "./protocols/icmp.c"
-#include "./protocols/tcp.c"
-#include "./protocols/udp.c"
+#include "./protocols/ethernet.h"
+#include "./protocols/ip.h"
+#include "./protocols/icmp.h"
+#include "./protocols/tcp.h"
+#include "./protocols/udp.h"
 
 #define PKT_LEN 8192
 #define MAGIC1 65536
