@@ -12,8 +12,7 @@ ip_header prepare_ip_header(packet data)
 {
     ip_header header = malloc(IP_HEADER_SIZE);
     memcpy(header, data, IP_HEADER_SIZE);
-    // header->next = header + IP_HEADER_SIZE;
-    header->next = NULL;
+    header->next = header + IP_HEADER_SIZE;
     return header;
 }
 

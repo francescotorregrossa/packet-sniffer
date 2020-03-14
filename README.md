@@ -1,6 +1,6 @@
 
 # Progetto Reti di calcolatori — Packet Sniffer
-_**Di Aldo Fumagalli e Francesco Torregrossa, A.A. 19/20**_
+_**di Aldo Fumagalli e Francesco Torregrossa, A.A. 19/20**_
 
 Abbiamo realizzato un programma in C che ascolta e analizza tutti i pacchetti ricevuti dal computer, permettendo di mostrare dettagli come la sorgente, il destinatario, i protocolli utilizzati, e anche i contenuti che essi trasportano.
 
@@ -23,8 +23,6 @@ Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di a
 - [Prova](#prova)
 
 <!-- /TOC -->
-
----
 
 ## Sviluppo del programma
 
@@ -77,6 +75,14 @@ typedef struct
     packet next;  // puntatore al pacchetto incapsulato
 
 } * eth_header;
+
+eth_header prepare_ethernet_header(packet data)
+{
+    eth_header header = malloc(ETH_HEADER_SIZE);
+    memcpy(header, data, ETH_HEADER_SIZE);
+    header->next = header + ETH_HEADER_SIZE;
+    return header;
+}
 ```
 
 #### IP
@@ -130,6 +136,14 @@ typedef struct
     packet next;
 
 } * ip_header;
+
+ip_header prepare_ip_header(packet data)
+{
+    ip_header header = malloc(IP_HEADER_SIZE);
+    memcpy(header, data, IP_HEADER_SIZE);
+    header->next = header + IP_HEADER_SIZE;
+    return header;
+}
 ```
 
 #### TCP
@@ -146,22 +160,9 @@ typedef struct
 ```c
 ```
 
-Tutto ciò è stato raccolto all'interno del file `headers.h`, accompagnato da alcuni metodi di utilità scritti in `headers.c`. Questi metodi includono, per esempio, la conversione in stringa degli indirizzi `MAC` e di quelli `IP`.
+Tutto ciò è stato raccolto all'interno del file [`headers.h`](./headers.h), accompagnato da alcuni metodi di utilità scritti in [`headers.c`](./headers.c). Questi metodi includono, per esempio, la conversione in stringa degli indirizzi `MAC` e di quelli `IP`.
 
 Oltre ai normali contenuti di ogni pacchetto, le strutture `eth_header` e `ip_header` contengono un puntatore `next` che permette di raggiungere facilmente l'inizio del pacchetto incapsulato.
-
-- **todo** non so se serve tenere il pezzo di dopo
-
-Sicuramente i metodi più importanti sono quelli dedicati ad istanziare le strutture dati, come quello seguente che mostra la preparazione di una struttura `eth_header`, relativa al protocollo [ethernet](#ethernet)
-```c
-eth_header prepare_ethernet_header(packet data)
-{
-    eth_header header = malloc(ETH_HEADER_SIZE);
-    memcpy(header, data, ETH_HEADER_SIZE);
-    header->next = header + ETH_HEADER_SIZE;
-    return header;
-}
-```
 
 ### Ricezione dei pacchetti
 
