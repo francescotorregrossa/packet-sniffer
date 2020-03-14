@@ -6,4 +6,5 @@ typedef unsigned int dword;
 typedef byte *packet;
 typedef char *string;
 
-word switch_encoding(word w);
+word switch_encoding_w(word w);
+dword switch_encoding_dw(dword dw);

@@ -16,6 +16,11 @@ ip_header prepare_ip_header(packet data)
 
   header->next = data + IP_HEADER_SIZE + options_length;
 
+  header->total_length = switch_encoding_w(header->total_length);
+  header->id = switch_encoding_w(header->id);
+  // todo fragment offset encoding
+  header->checksum = switch_encoding_w(header->checksum);
+
   return header;
 }
 
@@ -69,6 +74,7 @@ void describe_ip_header(ip_header header)
   printf("\tIP Header:\n");
   printf("\t\t- Destination: %s, Source: %s, Protocol: %d\n", dh, sh, header->protocol);
   printf("\t\t- Version: %d, Header Length: %d, TTL: %d\n", header->version, header->header_length, header->time_to_live);
+  printf("\t\t- Id: %d, Total Length: %d, Type of Service: %d\n", header->id, header->total_length, header->type_of_service);
 
   free(dh);
   free(sh);
