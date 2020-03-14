@@ -51,6 +51,9 @@ tcp_header prepare_tcp_header(packet data)
 
     header->next = data + TCP_HEADER_SIZE + options_length;
 
+    header->source_port = switch_encoding(header->source_port);
+    header->destination_port = switch_encoding(header->destination_port);
+
     return header;
 }
 
@@ -59,6 +62,10 @@ udp_header prepare_udp_header(packet data)
     udp_header header = malloc(sizeof(struct udp_header));
     memcpy(header, data, TCP_HEADER_SIZE);
     header->next = data + UDP_HEADER_SIZE;
+
+    header->source_port = switch_encoding(header->source_port);
+    header->destination_port = switch_encoding(header->destination_port);
+
     return header;
 }
 
@@ -107,6 +114,12 @@ string get_ip_address(ip_address address)
 
     output[len - 1] = '\0';
     return output;
+}
+
+word switch_encoding(word w) {
+    word lower = (w & (0b1111111100000000)) >> 8;
+    word upper = (w & (0b0000000011111111)) << 8;
+    return lower + upper;
 }
 
 void describe_eth_header(eth_header header)

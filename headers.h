@@ -118,7 +118,7 @@ struct tcp_header
     byte : 4,
         data_offset: 4;
     tcp_flags flags;
-    word windows_size;
+    word window_size;
 
     word checksum;
     word urgent;
@@ -155,6 +155,7 @@ udp_header prepare_udp_header(packet data);
 
 string get_mac_address(mac_address address);
 string get_ip_address(ip_address address);
+word switch_encoding(word w);
 
 void describe_eth_header(eth_header header);
 void describe_ip_header(ip_header ip_header);
