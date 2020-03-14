@@ -39,20 +39,33 @@ void analyze(packet buffer)
         ip_header iph = prepare_ip_header(eh->next);
         describe_ip_header(iph);
         
-        if (iph->protocol == 1)
+        switch (iph->protocol)
+        {
+        case 1:
         {
             icmp_header icmph = prepare_icmp_header(iph->next);
             describe_icmp_header(icmph);
             free(icmph);
+            break;
         }
-        else if(iph->protocol == 6)
+        case 6:
         {
             tcp_header tcph = prepare_tcp_header(iph->next);
             describe_tcp_header(tcph);
             free(tcph);
+            break;
         }
-
-
+        case 17:
+        {
+            udp_header udph = prepare_udp_header(iph->next);
+            describe_udp_header(udph);
+            free(udph);
+            break;
+        }
+        default:
+            break;
+        }
+        
         free(iph);
     }
     else
