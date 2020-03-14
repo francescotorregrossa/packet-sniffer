@@ -4,7 +4,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include "headers.h"
+#include "./protocols/ethernet.c"
+#include "./protocols/ip.c"
+#include "./protocols/icmp.c"
+#include "./protocols/tcp.c"
+#include "./protocols/udp.c"
 
 #define PKT_LEN 8192
 #define MAGIC1 65536
@@ -38,7 +42,7 @@ void analyze(packet buffer)
 
         ip_header iph = prepare_ip_header(eh->next);
         describe_ip_header(iph);
-        
+
         switch (iph->protocol)
         {
         case 1:
@@ -65,7 +69,7 @@ void analyze(packet buffer)
         default:
             break;
         }
-        
+
         free_ip_header(iph);
     }
     else
