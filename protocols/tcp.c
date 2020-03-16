@@ -5,7 +5,7 @@ tcp_header prepare_tcp_header(packet data)
   tcp_header header = malloc(sizeof(struct tcp_header));
   memcpy(header, data, TCP_HEADER_SIZE);
 
-  unsigned int options_length = header->data_offset * 4 - TCP_HEADER_SIZE;
+  unsigned int options_length = size_tcp_header(header) - TCP_HEADER_SIZE;
   if (options_length)
   {
     header->options = malloc(options_length);
@@ -25,6 +25,10 @@ tcp_header prepare_tcp_header(packet data)
   header->urgent = switch_encoding_w(header->urgent);
 
   return header;
+}
+
+dword size_tcp_header(tcp_header header) {
+  return header->data_offset * 4;
 }
 
 void free_tcp_header(tcp_header header)

@@ -9,6 +9,10 @@ icmp_header prepare_icmp_header(packet data)
   return header;
 }
 
+dword size_icmp_header(icmp_header header) {
+  return ICMP_HEADER_SIZE;
+}
+
 void free_icmp_header(icmp_header header)
 {
   free(header);

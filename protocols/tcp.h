@@ -42,6 +42,7 @@ struct tcp_header
 typedef struct tcp_header *tcp_header;
 
 tcp_header prepare_tcp_header(packet data);
+dword size_tcp_header(tcp_header header);
 void free_tcp_header(tcp_header header);
 
 void describe_tcp_header(tcp_header header);

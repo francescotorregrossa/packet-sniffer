@@ -13,6 +13,10 @@ udp_header prepare_udp_header(packet data)
   return header;
 }
 
+dword size_udp_header(udp_header header) {
+  return UDP_HEADER_SIZE;
+}
+
 void free_udp_header(udp_header header)
 {
   free(header);

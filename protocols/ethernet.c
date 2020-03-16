@@ -8,6 +8,10 @@ eth_header prepare_eth_header(packet data)
   return header;
 }
 
+dword size_eth_header(eth_header header) {
+  return ETH_HEADER_SIZE;
+}
+
 void free_eth_header(eth_header header)
 {
   free(header);

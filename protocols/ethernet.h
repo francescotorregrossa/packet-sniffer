@@ -27,6 +27,7 @@ struct eth_header
 typedef struct eth_header *eth_header;
 
 eth_header prepare_eth_header(packet data);
+dword size_eth_header(eth_header header);
 void free_eth_header(eth_header header);
 
 string get_mac_address(mac_address address);

@@ -19,6 +19,7 @@ struct udp_header
 typedef struct udp_header *udp_header;
 
 udp_header prepare_udp_header(packet data);
+dword size_udp_header(udp_header header);
 void free_udp_header(udp_header header);
 
 void describe_udp_header(udp_header header);

@@ -19,6 +19,7 @@ struct icmp_header
 typedef struct icmp_header *icmp_header;
 
 icmp_header prepare_icmp_header(packet data);
+dword size_icmp_header(icmp_header header);
 void free_icmp_header(icmp_header header);
 
 void describe_icmp_header(icmp_header header);

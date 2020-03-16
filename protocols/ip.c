@@ -5,7 +5,7 @@ ip_header prepare_ip_header(packet data)
   ip_header header = malloc(sizeof(struct ip_header));
   memcpy(header, data, IP_HEADER_SIZE);
 
-  unsigned int options_length = header->header_length * 4 - IP_HEADER_SIZE;
+  unsigned int options_length = size_ip_header(header) - IP_HEADER_SIZE;
   if (options_length)
   {
     header->options = malloc(options_length);
@@ -22,6 +22,10 @@ ip_header prepare_ip_header(packet data)
   header->checksum = switch_encoding_w(header->checksum);
 
   return header;
+}
+
+dword size_ip_header(ip_header header) {
+  return header->header_length * 4;
 }
 
 void free_ip_header(ip_header header)

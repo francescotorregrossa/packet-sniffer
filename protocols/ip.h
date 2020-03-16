@@ -42,6 +42,7 @@ struct ip_header
 typedef struct ip_header *ip_header;
 
 ip_header prepare_ip_header(packet data);
+dword size_ip_header(ip_header header);
 void free_ip_header(ip_header header);
 
 string get_ip_address(ip_address address);
