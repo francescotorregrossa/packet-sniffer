@@ -85,13 +85,12 @@ void analyze(packet buffer)
       break;
     }
     default:
+      print_separator();
+      print_plaintext(iph->next, iph->total_length - size_ip_header(iph));
       break;
     }
 
     free_ip_header(iph);
-  }
-  else
-  {
   }
 
   print_separator();

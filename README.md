@@ -295,12 +295,10 @@ void analyze(packet buffer)
       break;
     }
     default:
+      print_plaintext(iph->next, iph->total_length - size_ip_header(iph));
       break;
     }
     free_ip_header(iph);
-  }
-  else
-  {
   }
   free_eth_header(eh);
 }
