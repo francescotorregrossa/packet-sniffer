@@ -56,6 +56,21 @@ void analyze(packet buffer)
         {
             tcp_header tcph = prepare_tcp_header(iph->next);
             describe_tcp_header(tcph);
+
+            if (tcph->source_port == 80 || tcph->destination_port == 80)
+            {
+                dword http_size = iph->total_length - (iph->header_length + tcph->data_offset) * 4;
+                packet data = malloc(http_size);
+                memcpy(data, tcph->next, http_size);
+
+                printf("\nDATA: ");
+                for (dword i = 0; i < http_size; i++)
+                    printf("%c", data[i]);
+                printf("\n");
+
+                free(data);
+            }
+
             free_tcp_header(tcph);
             break;
         }
