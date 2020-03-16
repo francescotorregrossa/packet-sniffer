@@ -190,7 +190,7 @@ ip_header prepare_ip_header(packet data)
   ip_header header = malloc(sizeof(struct ip_header));
   memcpy(header, data, IP_HEADER_SIZE);
 
-  unsigned int options_length = header->header_length * 4 - IP_HEADER_SIZE;
+  unsigned int options_length = size_ip_header(header) - IP_HEADER_SIZE;
   if (options_length)
   {
     header->options = malloc(options_length);
@@ -207,6 +207,10 @@ ip_header prepare_ip_header(packet data)
   header->checksum = switch_encoding_w(header->checksum);
 
   return header;
+}
+
+dword size_ip_header(ip_header header) {
+  return header->header_length * 4;
 }
 ```
 
@@ -330,7 +334,7 @@ tcp_header prepare_tcp_header(packet data)
   tcp_header header = malloc(sizeof(struct tcp_header));
   memcpy(header, data, TCP_HEADER_SIZE);
 
-  unsigned int options_length = header->data_offset * 4 - TCP_HEADER_SIZE;
+  unsigned int options_length = size_tcp_header(header) - TCP_HEADER_SIZE;
   if (options_length)
   {
     header->options = malloc(options_length);
@@ -350,6 +354,10 @@ tcp_header prepare_tcp_header(packet data)
   header->urgent = switch_encoding_w(header->urgent);
 
   return header;
+}
+
+dword size_tcp_header(tcp_header header) {
+  return header->data_offset * 4;
 }
 ```
 
@@ -427,49 +435,42 @@ Ogni volta che arriva un pacchetto qualsiasi, esso viene analizzato e scomposto 
 ```c
 void analyze(packet buffer)
 {
-    eth_header eh = prepare_eth_header(buffer);
-    describe_eth_header(eh);
-
-    if (eh->type_code == 8)
+  eth_header eh = prepare_eth_header(buffer);
+  if (eh->type_code == 8)
+  {
+    ip_header iph = prepare_ip_header(eh->next);
+    switch (iph->protocol)
     {
-
-        ip_header iph = prepare_ip_header(eh->next);
-        describe_ip_header(iph);
-        
-        switch (iph->protocol)
-        {
-        case 1:
-        {
-            icmp_header icmph = prepare_icmp_header(iph->next);
-            describe_icmp_header(icmph);
-            free(icmph);
-            break;
-        }
-        case 6:
-        {
-            tcp_header tcph = prepare_tcp_header(iph->next);
-            describe_tcp_header(tcph);
-            free(tcph);
-            break;
-        }
-        case 17:
-        {
-            udp_header udph = prepare_udp_header(iph->next);
-            describe_udp_header(udph);
-            free(udph);
-            break;
-        }
-        default:
-            break;
-        }
-        
-        free(iph);
-    }
-    else
+    case 1:
     {
+      icmp_header icmph = prepare_icmp_header(iph->next);
+      print_plaintext(icmph->next, iph->total_length - size_ip_header(iph) - size_icmp_header(icmph));
+      free_icmp_header(icmph);
+      break;
     }
-
-    free(eh);
+    case 6:
+    {
+      tcp_header tcph = prepare_tcp_header(iph->next);
+      print_plaintext(tcph->next, iph->total_length - size_ip_header(iph) - size_tcp_header(tcph));
+      free_tcp_header(tcph);
+      break;
+    }
+    case 17:
+    {
+      udp_header udph = prepare_udp_header(iph->next);
+      print_plaintext(udph->next, iph->total_length - size_ip_header(iph) - size_udp_header(udph));
+      free_udp_header(udph);
+      break;
+    }
+    default:
+      break;
+    }
+    free_ip_header(iph);
+  }
+  else
+  {
+  }
+  free_eth_header(eh);
 }
 ```
 

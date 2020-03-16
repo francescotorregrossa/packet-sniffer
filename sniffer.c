@@ -38,15 +38,14 @@ int main(int argc, char *argv[])
 
 void analyze(packet buffer)
 {
-
   print_separator();
 
   eth_header eh = prepare_eth_header(buffer);
   describe_eth_header(eh);
-  
+
   if (eh->type_code == 8)
   {
-    
+
     ip_header iph = prepare_ip_header(eh->next);
     describe_ip_header(iph);
 
@@ -56,7 +55,7 @@ void analyze(packet buffer)
     {
       icmp_header icmph = prepare_icmp_header(iph->next);
       describe_icmp_header(icmph);
-      
+
       print_separator();
       print_plaintext(icmph->next, iph->total_length - size_ip_header(iph) - size_icmp_header(icmph));
 
@@ -67,7 +66,7 @@ void analyze(packet buffer)
     {
       tcp_header tcph = prepare_tcp_header(iph->next);
       describe_tcp_header(tcph);
-      
+
       print_separator();
       print_plaintext(tcph->next, iph->total_length - size_ip_header(iph) - size_tcp_header(tcph));
 
@@ -78,7 +77,7 @@ void analyze(packet buffer)
     {
       udp_header udph = prepare_udp_header(iph->next);
       describe_udp_header(udph);
-      
+
       print_separator();
       print_plaintext(udph->next, iph->total_length - size_ip_header(iph) - size_udp_header(udph));
 
@@ -101,15 +100,18 @@ void analyze(packet buffer)
   free_eth_header(eh);
 }
 
-void print_separator() {
+void print_separator()
+{
   for (int i = 0; i < MAX_TERMINAL_LINE_LENGTH; i++)
     printf("-");
   printf("\n");
 }
 
-void print_plaintext(packet data, dword size) {
+void print_plaintext(packet data, dword size)
+{
   printf("Data Length: %d, Raw Data:\n", size);
-  for (dword i = 0; i < size; i++) {
+  for (dword i = 0; i < size; i++)
+  {
     if (i % 100 == 0 && i != 0)
       printf("\n");
     if (32 <= data[i] && data[i] <= 126)
