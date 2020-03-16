@@ -29,9 +29,9 @@ Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di a
 
 ### Protocolli e strutture dati
 
-Ogni pacchetto di rete è stratificato, e ogni strato segue i suoi protocolli, ciascuno con delle proprietà e dei dati diversi. Perciò, partendo dai byte raw, abbiamo predisposto delle `struct` adatte a contenere gli header di ciascun protocollo.
+Ogni pacchetto di rete è stratificato, e ogni strato segue i suoi protocolli, ciascuno con delle proprietà e dei dati diversi. Perciò, partendo dai byte grezzi, abbiamo predisposto delle `struct` adatte a contenere gli header di ciascun protocollo e delle funzioni per analizzarli e visualizzarli. Il tutto è stato raccolto all'interno di vari file `.h` e `.c`, una coppia per protocollo. 
 
-Di seguito riportiamo la schematizzazione e la struttura in C relativa ad ogni protocollo analizzato, tenendo conto dei seguenti alias, definiti nel file [`datatypes.h`](./protocols/datatypes.h), scritti per fare chiarezza sui dati 
+Per prima cosa, però, riportiamo i seguenti alias, che abbiamo definito nel file [`datatypes.h`](./protocols/datatypes.h) per fare chiarezza sui dati 
 ```c
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -51,8 +51,6 @@ In questa relazione analizzeremo soltanto i protocolli Ethernet e IP perché le 
 
 #### Ethernet
 
-##### Header del protocollo
-
 Il protocollo Ethernet prevede un header di lunghezza fissa di 14 byte, di cui 6 sono dedicati all'indirizzo MAC del destinatario e 6 a quello della sorgente, e gli ultimi 2 indicano il protocollo utilizzato. 
 
 ```
@@ -67,8 +65,6 @@ Il protocollo Ethernet prevede un header di lunghezza fissa di 14 byte, di cui 6
 |            type code             |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- +
 ```
-
-##### Definizione della struttura
 
 Abbiamo predisposto una struttura con 6 byte, nominati da `a` ad `f`, per rappresentare un singolo indirizzo MAC. Questa struttura è stata utilizzata nella realizzazione di quella principale, `eth_header`.
 
@@ -97,8 +93,6 @@ struct eth_header
 typedef struct eth_header *eth_header;
 ```
 
-##### Preparazione di un'istanza
-
 La struttura contiene anche un puntatore `packet next` che serve per raggiungere facilmente il pacchetto incapsulato. Abbiamo definito la seguente funzione per assegnare il valore corretto al puntatore.
 
 ```c
@@ -112,8 +106,6 @@ eth_header prepare_eth_header(packet data);
 ```
 
 #### IPv4
-
-##### Header del protocollo
 
 ```
  0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7
@@ -131,8 +123,6 @@ eth_header prepare_eth_header(packet data);
 |                      options (variable length)                      |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 ```
-
-##### Definizione della struttura
 
 Anche per i pacchetti IPv4 abbiamo seguito la stessa logica, ovvero dopo aver analizzato l'header del pacchetto abbiamo creato una struttura adeguata ad ospitare i dati previsti. In particolare, è stato molto utile rappresentare alcuni dati utilizzando i bit field.
 
@@ -176,8 +166,6 @@ struct ip_header
 typedef struct ip_header *ip_header;
 ```
 
-##### Preparazione di un'istanza
-
 Come in precedenza, abbiamo definito la funzione `prepare_ip_header` per stabilire il valore del puntatore al pacchetto incapsulato `next`. 
 
 Tuttavia, questo header non ha lunghezza fissa, perché potrebbe contenere delle `options`. Per sapere se le contiene possiamo leggere il parametro `header_length`, che ha un valore minimo di 5 (`options` non presente) e un valore massimo di 15, e va interpretato come numero di *gruppi di 4 byte*. Se vale 5, la lunghezza dell'header IP è di 5 gruppi di 4 byte, cioè 20 byte.
@@ -216,8 +204,6 @@ dword size_ip_header(ip_header header) {
 
 #### ICMP
 
-##### Header del protocollo
-
 ```
  0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
@@ -227,42 +213,7 @@ dword size_ip_header(ip_header header) {
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 ```
 
-##### Definizione della struttura
-
-```c
-
-# define ICMP_HEADER_SIZE 8
-
-struct icmp_header
-{
-  byte type;
-  byte code;
-  word checksum;
-
-  dword options;
-
-  packet next;
-};
-
-typedef struct icmp_header *icmp_header;
-```
-
-##### Preparazione di un'istanza
-
-```c
-icmp_header prepare_icmp_header(packet data)
-{
-  icmp_header header = malloc(sizeof(struct icmp_header));
-  memcpy(header, data, ICMP_HEADER_SIZE);
-  header->next = data + ICMP_HEADER_SIZE;
-  header->checksum = switch_encoding_w(header->checksum);
-  return header;
-}
-```
-
 #### TCP
-
-##### Header del protocollo
 
 ```
  0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7
@@ -283,87 +234,7 @@ icmp_header prepare_icmp_header(packet data)
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 ```
 
-##### Definizione della struttura
-
-```c
-
-# define TCP_HEADER_SIZE 20
-
-typedef struct
-{
-  byte
-      cwr : 1,
-      ece : 1,
-      urg : 1,
-      ack : 1,
-      psh : 1,
-      rst : 1,
-      syn : 1,
-      fin : 1;
-} tcp_flags;
-
-struct tcp_header
-{
-  word source_port;
-  word destination_port;
-
-  dword sequence_number;
-  dword acknowldge_number;
-
-  byte : 4,
-      data_offset : 4;
-  tcp_flags flags;
-  word window_size;
-
-  word checksum;
-  word urgent;
-
-  void *options;
-
-  packet next;
-};
-
-typedef struct tcp_header *tcp_header;
-```
-
-##### Preparazione di un'istanza
-
-```c
-tcp_header prepare_tcp_header(packet data)
-{
-  tcp_header header = malloc(sizeof(struct tcp_header));
-  memcpy(header, data, TCP_HEADER_SIZE);
-
-  unsigned int options_length = size_tcp_header(header) - TCP_HEADER_SIZE;
-  if (options_length)
-  {
-    header->options = malloc(options_length);
-    memcpy(header->options, data + TCP_HEADER_SIZE, options_length);
-  }
-  else
-    header->options = NULL;
-
-  header->next = data + TCP_HEADER_SIZE + options_length;
-
-  header->source_port = switch_encoding_w(header->source_port);
-  header->destination_port = switch_encoding_w(header->destination_port);
-  header->sequence_number = switch_encoding_dw(header->sequence_number);
-  header->acknowldge_number = switch_encoding_dw(header->acknowldge_number);
-  header->window_size = switch_encoding_w(header->window_size);
-  header->checksum = switch_encoding_w(header->checksum);
-  header->urgent = switch_encoding_w(header->urgent);
-
-  return header;
-}
-
-dword size_tcp_header(tcp_header header) {
-  return header->data_offset * 4;
-}
-```
-
 #### UDP
-
-##### Header del protocollo
 
 ```
  0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7
@@ -373,45 +244,6 @@ dword size_tcp_header(tcp_header header) {
 |              length              |              checksum            |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 ```
-
-##### Definizione della struttura
-
-```c
-
-# define UDP_HEADER_SIZE 8
-
-struct udp_header
-{
-  word source_port;
-  word destination_port;
-
-  word length;
-  word checksum;
-
-  packet next;
-};
-
-typedef struct udp_header *udp_header;
-```
-
-##### Preparazione di un'istanza
-
-```c
-udp_header prepare_udp_header(packet data)
-{
-  udp_header header = malloc(sizeof(struct udp_header));
-  memcpy(header, data, UDP_HEADER_SIZE);
-  header->next = data + UDP_HEADER_SIZE;
-
-  header->source_port = switch_encoding_w(header->source_port);
-  header->destination_port = switch_encoding_w(header->destination_port);
-  header->length = switch_encoding_w(header->length);
-  header->checksum = switch_encoding_w(header->checksum);
-  return header;
-}
-```
-
-Tutto ciò è stato raccolto all'interno di vari file, `.h` e `.c`, una coppia per protocollo. I file contengono anche alcune funzioni di utilità tra cui, per esempio, troviamo la conversione in stringa degli indirizzi `MAC` e di quelli `IP`.
 
 ### Ricezione dei pacchetti
 
