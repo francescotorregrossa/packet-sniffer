@@ -305,8 +305,95 @@ void analyze(packet buffer)
 ```
 
 ## Preparazione dell'OrangePi
+l'OrangePi è una scheda **Open-Source** basata su architettura **ARM**, su questa scheda possono essere eseguite distribuzioni linux e quella che abbiamo utilizzzato noi è  **Armbian**, una distribuzione di linux creata per dispositivi che funzionano con architetture **ARM**.
 
+Successivamente abbiamo configurato le impostazioni di rete, per poter collegare la scheda di rete wireless ad una rete Wi-Fi, nel seguente modo:
 
+**Verifica dei driver della scheda di rete**
+```bash
+$ lspci -k
+06:00.0 Network controller: Intel Corporation WiFi Link 5100
+	Subsystem: Intel Corporation WiFi Link 5100 AGN
+	Kernel driver in use: iwlwifi
+	Kernel modules: iwlwifi
+```
+**Trovare il nome della scheda di rete**
+```bash
+$ iwconfig
+wlan0  unassociated  Nickname:"<WIFI@REALTEK>"
+          Mode:Auto  Frequency=2.412 GHz  Access Point: Not-Associated   
+          Sensitivity:0/0  
+          Retry:off   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+```
+
+**Verifica avvenuta creazione interfaccia wireless**
+```bash
+$ ip link set dev wlan0 up
+```
+Non restituendo nessun errore, il terminale conferma l'avvenuta creazione.
+
+**Attivazione dell'interfaccia**
+```bash
+$ iw wlan0 up
+```
+**Creazione file di configurazione**
+
+```bash
+/etc/wpa_supplicant.conf
+ctrl_interface=/run/wpa_supplicant
+update_config=1
+```
+**Avvio wpa_supplicant**
+```bash
+$ wpa_supplicant -B -i interface -c /etc/wpa_supplicant.conf
+```
+**Avvio del prompt interattivo del tool wpa **
+```bash
+$ wpa_cli
+```
+Scansione delle reti con stampa del risultato
+```bash
+> scan									#scansione reti
+OK
+<3>CTRL-EVENT-SCAN-RESULTS
+> scan_results					#stampa
+bssid / frequency / signal level / flags / ssid
+00:00:00:00:00:00 2462 -49 [WPA2-PSK-CCMP][ESS] MIOSSID
+11:11:11:11:11:11 2437 -64 [WPA2-PSK-CCMP][ESS] ALTROSSID
+```
+Aggiunta della rete con inserimento delle credenziali
+```bash
+> add_network						#aggiunta rete
+0
+> set_network 0 ssid "MIOSSID"
+> set_network 0 psk "passphrase"
+> enable_network 0
+<2>CTRL-EVENT-CONNECTED - Connection to 00:00:00:00:00:00 completed (reauth) [id=0 id_str=]
+```
+Questo combinazione di comandi non fa altro che creare una configurazione di rete nel file ```/etc/wpa_supplicant.conf``` come segue:
+```
+network={
+    ssid="MIOSSID"
+    #psk="passphrase"
+    psk=59e0d07fa4c7741797a4e394f38a5c321e3bed51d54ad5fcbd3f84bc7415d73d
+}
+```
+Se la connessione è avvenuta con successo, allora bisogna salvare la configurazione:
+```bash
+>save_config
+OK
+```
+**Richiesta indirizzo IP**
+Ultimo passaggio è quello della richiesta dell'indirizzo IP per finalemente partecipare alla rete:
+```bash
+$ dhcpcd wlan0
+```
+
+**TODO** Gestione sessioni wpa_supplicant
 ## Sviluppo del sito web
 
 
