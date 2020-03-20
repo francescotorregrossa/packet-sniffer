@@ -18,7 +18,7 @@ Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di a
     - [TCP](#tcp)
     - [UDP](#udp)
   - [Ricezione dei pacchetti](#ricezione-dei-pacchetti)
-  - [Interpretazione dei pacchetti](#interpretazione-dei-pacchetti)
+  - [Analisi dei pacchetti](#analisi-dei-pacchetti)
 - [Preparazione dell'OrangePi](#preparazione-dellorangepi)
 - [Sviluppo del sito web](#sviluppo-del-sito-web)
 - [Prova](#prova)
@@ -247,10 +247,22 @@ dword size_ip_header(ip_header header) {
 
 ### Ricezione dei pacchetti
 
-Mediante la libreria `sys/socket.h` abbiamo richiesto al sistema la creazione di una socket, i cui parametri sono **magici**. La lettura dello stream appena aperto viene poi realizzata tramite il metodo `read` della libreria `unistd.h`.
+Mediante le librerie `sys/socket.h` e `netinet/if_ether.h`, abbiamo richiesto al sistema la creazione di una socket in grado di ricevere qualsiasi pacchetto, la cui lettura viene realizzata tramite il metodo `read` della libreria `unistd.h`.
+
+Nel dettaglio, la socket viene creata con questi parametri
 
 ```c
-int sock = socket(AF_PACKET, SOCK_RAW, MAGIC2);
+int socket(int family, int type, int protocol)
+```
+
+- `family` viene impostato a `AF_PACKET`, così la comunicazione può avvenire al livello di collegamento, quindi si riceveranno i frame Ethernet
+- `type` viene impostato a `SOCK_RAW`, per accettare pacchetti con qualsiasi tipo di socket
+- `protocol` viene impostato a `ETH_P_ALL`, per indicare che pacchetti con qualsiasi protocollo della `family` sono accettati (anche se successivamente analizzeremo solo quelli contenenti IPv4)
+
+Pertanto, il codice che esegue la lettura è il seguente, in cui la funzione `ntohs` esegue il passaggio da `LITTLE_ENDIAN` a `BIG_ENDIAN` e viceversa (se necessario)
+
+```c
+int sock = socket(AF_PACKET, SOCK_RAW, ntohs(ETH_P_ALL));
 if (sock < 0)
     perror("Socket creation error");
 
@@ -258,49 +270,51 @@ while (read(sock, buffer, PKT_LEN) > 0)
     analyze(buffer);
 ```
 
-- **todo** spiegare i parametri magici
-
-### Interpretazione dei pacchetti
+### Analisi dei pacchetti
 
 Ogni volta che arriva un pacchetto qualsiasi, esso viene analizzato e scomposto utilizzando le funzioni e le strutture relative ai vari protocolli.
+
+Di seguito riportiamo lo scheletro della funzione `analyze`, che mostra la logica con cui i pacchetti vengono estratti a vari livelli. La funzione vera, nel file `sniffer.c`, gestisce, tra le altre cose, anche i filtri sull'output a video.
 
 ```c
 void analyze(packet buffer)
 {
   eth_header eh = prepare_eth_header(buffer);
-  if (eh->type_code == 8)
+  describe_eth_header(eh);
+
+  if (eh->type_code == ntohs(ETH_P_IP))
   {
     ip_header iph = prepare_ip_header(eh->next);
+    describe_ip_header(iph);
+
     switch (iph->protocol)
     {
-    case 1:
+    case IPPROTO_ICMP:
     {
       icmp_header icmph = prepare_icmp_header(iph->next);
+      describe_icmp_header(icmph);
       print_plaintext(icmph->next, iph->total_length - size_ip_header(iph) - size_icmp_header(icmph));
-      free_icmp_header(icmph);
       break;
     }
-    case 6:
+    case IPPROTO_TCP:
     {
       tcp_header tcph = prepare_tcp_header(iph->next);
+      describe_tcp_header(tcph);
       print_plaintext(tcph->next, iph->total_length - size_ip_header(iph) - size_tcp_header(tcph));
-      free_tcp_header(tcph);
       break;
     }
-    case 17:
+    case IPPROTO_UDP:
     {
       udp_header udph = prepare_udp_header(iph->next);
+      describe_udp_header(udph);
       print_plaintext(udph->next, iph->total_length - size_ip_header(iph) - size_udp_header(udph));
-      free_udp_header(udph);
       break;
     }
     default:
       print_plaintext(iph->next, iph->total_length - size_ip_header(iph));
       break;
     }
-    free_ip_header(iph);
   }
-  free_eth_header(eh);
 }
 ```
 
@@ -394,6 +408,7 @@ $ dhcpcd wlan0
 ```
 
 **TODO** Gestione sessioni wpa_supplicant
+
 ## Sviluppo del sito web
 
 
