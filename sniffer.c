@@ -3,6 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <linux/if_ether.h>
 
 #include "protocols/ethernet.h"
 #include "protocols/ip.h"
@@ -11,9 +13,6 @@
 #include "protocols/udp.h"
 
 #define PKT_LEN 8192
-#define MAGIC1 65536
-#define MAGIC2 768
-
 #define MAX_TERMINAL_LINE_LENGTH 100
 
 void analyze(packet buffer);
@@ -38,7 +37,8 @@ int main(int argc, char *argv[])
 {
 
   config = malloc(sizeof(unsigned char));
-  config->eth = config->ip = config->icmp = config->tcp = config->udp = config->plain = config->plainempty = config->unknown = 1;
+  config->eth = config->ip = config->icmp = config->tcp = config->udp =
+      config->plain = config->plainempty = config->unknown = 1;
   
   for (int i = 1; i < argc; ++i)
   {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   packet buffer = malloc(PKT_LEN);
   memset(buffer, 0, PKT_LEN);
 
-  int sock = socket(AF_PACKET, SOCK_RAW, MAGIC2);
+  int sock = socket(AF_PACKET, SOCK_RAW, ntohs(ETH_P_ALL));
   if (sock < 0)
     perror("Errore socket()");
 
@@ -80,13 +80,13 @@ void analyze(packet buffer)
 {
   eth_header eh = prepare_eth_header(buffer);
 
-  if (eh->type_code == 8)
+  if (eh->type_code == ntohs(ETH_P_IP))
   {
     ip_header iph = prepare_ip_header(eh->next);
     
     switch (iph->protocol)
     {
-    case 1:
+    case IPPROTO_ICMP:
     {
       if (config->icmp)
       {
@@ -118,7 +118,7 @@ void analyze(packet buffer)
       }
       break;
     }
-    case 6:
+    case IPPROTO_TCP:
     {
       if (config->tcp)
       {
@@ -150,7 +150,7 @@ void analyze(packet buffer)
       }
       break;
     }
-    case 17:
+    case IPPROTO_UDP:
     {
       if (config->udp)
       {
@@ -213,6 +213,15 @@ void analyze(packet buffer)
     }
 
     free_ip_header(iph);
+  }
+  else {
+    if (config->unknown && config->eth && config->plainempty)
+    {
+      print_separator();
+      describe_eth_header(eh);
+      print_separator();
+      printf("\n\n\n");
+    }
   }
 
   free_eth_header(eh);
