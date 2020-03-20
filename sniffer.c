@@ -20,8 +20,47 @@ void analyze(packet buffer);
 void print_separator();
 void print_plaintext(packet data, dword size);
 
+typedef struct
+{
+  unsigned char eth : 1,
+                ip: 1,
+                icmp: 1,
+                tcp : 1,
+                udp : 1,
+                plain : 1,
+                plainempty : 1,
+                unknown : 1;
+} * print_config;
+
+print_config config;
+
 int main(int argc, char *argv[])
 {
+
+  config = malloc(sizeof(unsigned char));
+  config->eth = config->ip = config->icmp = config->tcp = config->udp = config->plain = config->plainempty = config->unknown = 1;
+  
+  for (int i = 1; i < argc; ++i)
+  {
+    // printf("argv[%d]: %s\n", i, argv[i]);
+
+    if (strcmp("--noeth", argv[i]) == 0)
+      config->eth = 0;
+    if (strcmp("--noip", argv[i]) == 0)
+      config->ip = 0;
+    if (strcmp("--noicmp", argv[i]) == 0)
+      config->icmp = 0;
+    if (strcmp("--notcp", argv[i]) == 0)
+      config->tcp = 0;
+    if (strcmp("--noudp", argv[i]) == 0)
+      config->udp = 0;
+    if (strcmp("--noplain", argv[i]) == 0)
+      config->plain = 0;
+    if (strcmp("--noplainempty", argv[i]) == 0)
+      config->plainempty = 0;
+    if (strcmp("--nounknown", argv[i]) == 0)
+      config->unknown = 0;
+  }
 
   packet buffer = malloc(PKT_LEN);
   memset(buffer, 0, PKT_LEN);
@@ -33,68 +72,148 @@ int main(int argc, char *argv[])
   while (read(sock, buffer, PKT_LEN) > 0)
     analyze(buffer);
 
+  free(config);
   return 0;
 }
 
 void analyze(packet buffer)
 {
-  print_separator();
-
   eth_header eh = prepare_eth_header(buffer);
-  describe_eth_header(eh);
 
   if (eh->type_code == 8)
   {
-
     ip_header iph = prepare_ip_header(eh->next);
-    describe_ip_header(iph);
-
+    
     switch (iph->protocol)
     {
     case 1:
     {
-      icmp_header icmph = prepare_icmp_header(iph->next);
-      describe_icmp_header(icmph);
+      if (config->icmp)
+      {
+        icmp_header icmph = prepare_icmp_header(iph->next);
+        
+        dword psize = iph->total_length - size_ip_header(iph) - size_icmp_header(icmph);
+        if (config->plainempty || psize) 
+        {
+          print_separator();
 
-      print_separator();
-      print_plaintext(icmph->next, iph->total_length - size_ip_header(iph) - size_icmp_header(icmph));
+          if (config->eth)
+            describe_eth_header(eh);
+          if (config->ip)
+            describe_ip_header(iph);
+          
+          describe_icmp_header(icmph);
+          print_separator();
+          
+          if (config->plain)
+          {
+            print_plaintext(icmph->next, psize);
+            print_separator();
+          }
 
-      free_icmp_header(icmph);
+          printf("\n\n\n");
+        }
+
+        free_icmp_header(icmph);
+      }
       break;
     }
     case 6:
     {
-      tcp_header tcph = prepare_tcp_header(iph->next);
-      describe_tcp_header(tcph);
+      if (config->tcp)
+      {
+        tcp_header tcph = prepare_tcp_header(iph->next);
 
-      print_separator();
-      print_plaintext(tcph->next, iph->total_length - size_ip_header(iph) - size_tcp_header(tcph));
+        dword psize = iph->total_length - size_ip_header(iph) - size_tcp_header(tcph);
+        if (config->plainempty || psize) 
+        {
+          print_separator();
 
-      free_tcp_header(tcph);
+          if (config->eth)
+            describe_eth_header(eh);
+          if (config->ip)
+            describe_ip_header(iph);
+          
+          describe_tcp_header(tcph);
+          print_separator();
+          
+          if (config->plain)
+          {
+            print_plaintext(tcph->next, psize);
+            print_separator();
+          }
+
+          printf("\n\n\n");
+        }
+
+        free_tcp_header(tcph);
+      }
       break;
     }
     case 17:
     {
-      udp_header udph = prepare_udp_header(iph->next);
-      describe_udp_header(udph);
+      if (config->udp)
+      {
+        udp_header udph = prepare_udp_header(iph->next);
 
-      print_separator();
-      print_plaintext(udph->next, iph->total_length - size_ip_header(iph) - size_udp_header(udph));
+        dword psize = iph->total_length - size_ip_header(iph) - size_udp_header(udph);
+        if (config->plainempty || psize) 
+        {
+          print_separator();
 
-      free_udp_header(udph);
+          if (config->eth)
+            describe_eth_header(eh);
+          if (config->ip)
+            describe_ip_header(iph);
+          
+          describe_udp_header(udph);
+          print_separator();
+
+          if (config->plain)
+          {
+            print_plaintext(udph->next, psize);
+            print_separator();
+          }
+
+          printf("\n\n\n");
+        }
+
+        free_udp_header(udph);
+      }
       break;
     }
     default:
-      print_separator();
-      print_plaintext(iph->next, iph->total_length - size_ip_header(iph));
+      if (config->unknown)
+      {
+        dword psize = iph->total_length - size_ip_header(iph);
+        if (config->plainempty || psize)
+        {
+          if (config->eth || config->ip)
+            print_separator();
+
+          if (config->eth)
+            describe_eth_header(eh);
+          if (config->ip)
+            describe_ip_header(iph);
+
+          if (config->eth || config->ip || config->plain)
+            print_separator();
+          
+          if (config->plain)
+            print_plaintext(iph->next, psize);
+
+          if (config->eth || config->ip || config->plain)
+          {
+            print_separator();
+            printf("\n\n\n");
+          }
+        }
+      }      
       break;
     }
 
     free_ip_header(iph);
   }
-
-  print_separator();
-  printf("\n\n\n");
 
   free_eth_header(eh);
 }
