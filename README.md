@@ -29,9 +29,9 @@ Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di a
 
 ### Protocolli e strutture dati
 
-Ogni pacchetto di rete è stratificato, e ogni strato segue i suoi protocolli, ciascuno con delle proprietà e dei dati diversi. Perciò, partendo dai byte grezzi, abbiamo predisposto delle `struct` adatte a contenere gli header di ciascun protocollo e delle funzioni per analizzarli e visualizzarli. Il tutto è stato raccolto all'interno di vari file `.h` e `.c`, una coppia per protocollo. 
+Ogni pacchetto di rete è stratificato, e ogni strato segue i suoi protocolli, ciascuno con delle proprietà e dei dati diversi. Perciò, partendo dai byte grezzi, abbiamo predisposto delle `struct` adatte a contenere gli header di ciascun protocollo e delle funzioni per analizzarli e visualizzarli. Il tutto è stato raccolto all'interno di vari file `.h` e `.c`, una coppia per protocollo.
 
-Per prima cosa, però, riportiamo i seguenti alias, che abbiamo definito nel file [`datatypes.h`](./protocols/datatypes.h) per fare chiarezza sui dati 
+Per prima cosa, però, riportiamo i seguenti alias, che abbiamo definito nel file [`datatypes.h`](./protocols/datatypes.h) per fare chiarezza sui dati
 ```c
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -51,7 +51,7 @@ In questa relazione analizzeremo soltanto i protocolli Ethernet e IP perché le 
 
 #### Ethernet
 
-Il protocollo Ethernet prevede un header di lunghezza fissa di 14 byte, di cui 6 sono dedicati all'indirizzo MAC del destinatario e 6 a quello della sorgente, e gli ultimi 2 indicano il protocollo utilizzato. 
+Il protocollo Ethernet prevede un header di lunghezza fissa di 14 byte, di cui 6 sono dedicati all'indirizzo MAC del destinatario e 6 a quello della sorgente, e gli ultimi 2 indicano il protocollo utilizzato.
 
 ```
  0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7 | 0 1 2 3 4 5 6 7
@@ -166,7 +166,7 @@ struct ip_header
 typedef struct ip_header *ip_header;
 ```
 
-Come in precedenza, abbiamo definito la funzione `prepare_ip_header` per stabilire il valore del puntatore al pacchetto incapsulato `next`. 
+Come in precedenza, abbiamo definito la funzione `prepare_ip_header` per stabilire il valore del puntatore al pacchetto incapsulato `next`.
 
 Tuttavia, questo header non ha lunghezza fissa, perché potrebbe contenere delle `options`. Per sapere se le contiene possiamo leggere il parametro `header_length`, che ha un valore minimo di 5 (`options` non presente) e un valore massimo di 15, e va interpretato come numero di *gruppi di 4 byte*. Se vale 5, la lunghezza dell'header IP è di 5 gruppi di 4 byte, cioè 20 byte.
 
@@ -321,9 +321,10 @@ void analyze(packet buffer)
 ## Preparazione dell'OrangePi
 l'OrangePi è una scheda **Open-Source** basata su architettura **ARM**, su questa scheda possono essere eseguite distribuzioni linux e quella che abbiamo utilizzzato noi è  **Armbian**, una distribuzione di linux creata per dispositivi che funzionano con architetture **ARM**.
 
-Successivamente abbiamo configurato le impostazioni di rete, per poter collegare la scheda di rete wireless ad una rete Wi-Fi, nel seguente modo:
+Ciò che segue è la configurazione della scheda di rete wireless e quindi delle impostazioni di rete dell'OrangePi. Essa è suddivisa in più fasi procedurali, dove la non riuscita di una qualsiasi di esse causa il non poter procedere alla fase successiva, e quindi in queste situazioni bisogna intevenire con strumenti di risuluzione per poter, poi, riprendere con la normale procedura.
 
-**Verifica dei driver della scheda di rete**
+**Verifica dei driver della scheda di rete**<br>
+Prima di tutto bisogna verificare che i driver installati nel nostro dispositivo siano compatibili con la nostra scheda di rete. Questo si può fare con il seguente comando:
 ```bash
 $ lspci -k
 06:00.0 Network controller: Intel Corporation WiFi Link 5100
@@ -331,7 +332,9 @@ $ lspci -k
 	Kernel driver in use: iwlwifi
 	Kernel modules: iwlwifi
 ```
-**Trovare il nome della scheda di rete**
+In questo caso i driver sono correttamenti installati, ma in caso contrario bisognerebbe ricorrere a comandi risolutivi per l'installazione dei driver corretti, se esistenti.<br>
+<br>**Trovare il nome della scheda di rete**<br>
+Dopo la verifica dei driver bisogna immediatamente identificare la nostra scheda di rete, e successivamente controllare che l'interfaccia wireless si sia creata correttamente autonomamente, in maniera tale da poter incominciare la nostra vera e propria configurazione.
 ```bash
 $ iwconfig
 wlan0  unassociated  Nickname:"<WIFI@REALTEK>"
@@ -343,33 +346,40 @@ wlan0  unassociated  Nickname:"<WIFI@REALTEK>"
           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 ```
-
-**Verifica avvenuta creazione interfaccia wireless**
+*wlan0* è il nome della nostra scheda di rete<br>
+<br>**Verifica avvenuta creazione interfaccia wireless**<br>
 ```bash
 $ ip link set dev wlan0 up
 ```
 Non restituendo nessun errore, il terminale conferma l'avvenuta creazione.
 
-**Attivazione dell'interfaccia**
+**Attivazione dell'interfaccia**<br>
+Il primo passo è quello di abilitare l'interfaccia tramite il comando *iw* o alternativamente *ifconfig*. Questi due sono riepsettivamente comandi per la gestione delle interfaccie wireless (*iw*) e per le interfacce in generale (*ifconfig*).
 ```bash
 $ iw wlan0 up
 ```
-**Creazione file di configurazione**
+**Creazione file di configurazione**<br>
+Il secondo passo è quello di creare un file di configurazione, dove i nostri tool che ci permetteranno di configurare la rete andranno a salvare informazioni che servono ad accedere alla rete e a mantenere la connessione con essa.
 
 ```bash
 /etc/wpa_supplicant.conf
 ctrl_interface=/run/wpa_supplicant
 update_config=1
 ```
-**Avvio wpa_supplicant**
+**Avvio wpa_supplicant**<br>
+*wpa_supplicant* è un tool che ci permette di stabilire una connessione wireless con chiave **WPA**. Quindi esso deve essere avviato specificando il file di configurazione dove lui si dovrà appoggiare.
+
 ```bash
 $ wpa_supplicant -B -i interface -c /etc/wpa_supplicant.conf
 ```
 **Avvio del prompt interattivo del tool wpa **
+
+*wpa_cli* è un prompt interattivo che funziona tramite *wpa_supplicant*. Da esso avverrà la configurazione della connessione tra la nostra scheda di rete Wi-Fi e il router della rete Wi-Fi su cui vogliamo collegarci. Per semplicità l'SSID della rete wireless sarà *MIOSSID*.
+
 ```bash
 $ wpa_cli
 ```
-Scansione delle reti con stampa del risultato
+Scansione delle reti con il comando *scan* e successiva stampa del risultato tramite *scan_result*
 ```bash
 > scan									#scansione reti
 OK
@@ -379,7 +389,7 @@ bssid / frequency / signal level / flags / ssid
 00:00:00:00:00:00 2462 -49 [WPA2-PSK-CCMP][ESS] MIOSSID
 11:11:11:11:11:11 2437 -64 [WPA2-PSK-CCMP][ESS] ALTROSSID
 ```
-Aggiunta della rete con inserimento delle credenziali
+Aggiunta della rete con inserimento delle credenziali tramite: *add_network*, *set_network* e *enable_network*. Per semplicità la password della rete wireless sarà: *passphrase*
 ```bash
 > add_network						#aggiunta rete
 0
@@ -396,13 +406,13 @@ network={
     psk=59e0d07fa4c7741797a4e394f38a5c321e3bed51d54ad5fcbd3f84bc7415d73d
 }
 ```
-Se la connessione è avvenuta con successo, allora bisogna salvare la configurazione:
+Se la connessione è avvenuta con successo, allora bisogna salvare la configurazione con il comando *save_config*:
 ```bash
 >save_config
 OK
 ```
 **Richiesta indirizzo IP**
-Ultimo passaggio è quello della richiesta dell'indirizzo IP per finalemente partecipare alla rete:
+Ultimo passaggio è quello della richiesta dell'indirizzo IP tramite il comando *dhcpcd* per finalemente partecipare alla rete, se non presente il comando deve essere installato, poichè necessario per la comunicazione con il server dhcpd del router.
 ```bash
 $ dhcpcd wlan0
 ```
