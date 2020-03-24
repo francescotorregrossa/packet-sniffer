@@ -413,11 +413,18 @@ OK
 ```
 **Richiesta indirizzo IP**
 Ultimo passaggio è quello della richiesta dell'indirizzo IP tramite il comando *dhcpcd* per finalemente partecipare alla rete, se non presente il comando deve essere installato, poichè necessario per la comunicazione con il server dhcpd del router.
+
 ```bash
 $ dhcpcd wlan0
 ```
 
-**TODO** Gestione sessioni wpa_supplicant
+
+
+**Risoluzione dei problemi**
+Se per qualche motivo dopo la configurazione di *wpa_supplicant* la connessione dovesse fallire allora necessitano dei comandi per la gestione delle sessioni di *wpa_supplicant*:
+
++ Il comando ```ps ax | grep "wpa_supplicant -B" |grep -v grep``` mi permette di visualizzare id di tutte le sessioni che sono state aperte con *wpa_supplicant*, in maniera tale da poterle gestire, visto che per esistenere una connessione con questo tool, deve essere attiva un'unica sessione di *wpa_supplicant*
++ il comando ```kill $(pgrep -f "wpa_supplicant -B")``` chiuderà tutte i processi di *wpa_supplicant*, così da darmi la possibilità di riconfigurare la rete in maniera diversa per far avvenire una effettiva connessione
 
 ## Sviluppo del sito web
 
