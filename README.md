@@ -20,8 +20,24 @@ Così, accedendo e utilizzando il sito web, abbiamo potuto simulare l'invio di a
   - [Ricezione dei pacchetti](#ricezione-dei-pacchetti)
   - [Analisi dei pacchetti](#analisi-dei-pacchetti)
 - [Preparazione dell'OrangePi](#preparazione-dellorangepi)
+  - [Verifica dei driver della scheda di rete](#verifica-dei-driver-della-scheda-di-rete)
+  - [Trovare il nome della scheda di rete](#trovare-il-nome-della-scheda-di-rete)
+    - [Verifica avvenuta creazione interfaccia wireless](#verifica-avvenuta-creazione-interfaccia-wireless)
+  - [Attivazione dell'interfaccia](#attivazione-dellinterfaccia)
+    - [Creazione file di configurazione](#creazione-file-di-configurazione)
+    - [Avvio wpasupplicant](#avvio-wpasupplicant)
+    - [Avvio del prompt interattivo del tool wpa](#avvio-del-prompt-interattivo-del-tool-wpa)
+  - [Richiesta indirizzo IP](#richiesta-indirizzo-ip)
+  - [Risoluzione dei problemi](#risoluzione-dei-problemi)
+  - [Configurazione del server](#configurazione-del-server)
+    - [Installazione e configurazione dei software necessari](#installazione-e-configurazione-dei-software-necessari)
 - [Sviluppo del sito web](#sviluppo-del-sito-web)
-- [Prova](#prova)
+    - [Database](#database)
+  - [Registrazione, login e pagina utente](#registrazione-login-e-pagina-utente)
+  - [Home e ricerca](#home-e-ricerca)
+- [Prova dello sniffer](#prova-dello-sniffer)
+  - [Creazione di un account](#creazione-di-un-account)
+  - [Ricerca di brani](#ricerca-di-brani)
 
 <!-- /TOC -->
 
@@ -323,7 +339,7 @@ l'OrangePi è una scheda **Open-Source** basata su architettura **ARM**, su ques
 
 Ciò che segue è la configurazione della scheda di rete wireless e quindi delle impostazioni di rete dell'OrangePi. Essa è suddivisa in più fasi procedurali, dove la non riuscita di una qualsiasi di esse causa il non poter procedere alla fase successiva, e quindi in queste situazioni bisogna intevenire con strumenti di risuluzione per poter, poi, riprendere con la normale procedura.
 
-**Verifica dei driver della scheda di rete**<br>
+### Verifica dei driver della scheda di rete
 Prima di tutto bisogna verificare che i driver installati nel nostro dispositivo siano compatibili con la nostra scheda di rete. Questo si può fare con il seguente comando:
 ```bash
 $ lspci -k
@@ -332,8 +348,9 @@ $ lspci -k
 	Kernel driver in use: iwlwifi
 	Kernel modules: iwlwifi
 ```
-In questo caso i driver sono correttamenti installati, ma in caso contrario bisognerebbe ricorrere a comandi risolutivi per l'installazione dei driver corretti, se esistenti.<br>
-<br>**Trovare il nome della scheda di rete**<br>
+In questo caso i driver sono correttamenti installati, ma in caso contrario bisognerebbe ricorrere a comandi risolutivi per l'installazione dei driver corretti, se esistenti.
+
+### Trovare il nome della scheda di rete
 Dopo la verifica dei driver bisogna immediatamente identificare la nostra scheda di rete, e successivamente controllare che l'interfaccia wireless si sia creata correttamente autonomamente, in maniera tale da poter incominciare la nostra vera e propria configurazione.
 ```bash
 $ iwconfig
@@ -346,19 +363,24 @@ wlan0  unassociated  Nickname:"<WIFI@REALTEK>"
           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 ```
-*wlan0* è il nome della nostra scheda di rete<br>
-<br>**Verifica avvenuta creazione interfaccia wireless**<br>
+*wlan0* è il nome della nostra scheda di rete
+
+#### Verifica avvenuta creazione interfaccia wireless
+
 ```bash
 $ ip link set dev wlan0 up
 ```
 Non restituendo nessun errore, il terminale conferma l'avvenuta creazione.
 
-**Attivazione dell'interfaccia**<br>
+### Attivazione dell'interfaccia
+
 Il primo passo è quello di abilitare l'interfaccia tramite il comando *iw* o alternativamente *ifconfig*. Questi due sono riepsettivamente comandi per la gestione delle interfaccie wireless (*iw*) e per le interfacce in generale (*ifconfig*).
 ```bash
 $ iw wlan0 up
 ```
-**Creazione file di configurazione**<br>
+
+#### Creazione file di configurazione
+
 Il secondo passo è quello di creare un file di configurazione, dove i nostri tool che ci permetteranno di configurare la rete andranno a salvare informazioni che servono ad accedere alla rete e a mantenere la connessione con essa.
 
 ```bash
@@ -366,13 +388,16 @@ Il secondo passo è quello di creare un file di configurazione, dove i nostri to
 ctrl_interface=/run/wpa_supplicant
 update_config=1
 ```
-**Avvio wpa_supplicant**<br>
+
+#### Avvio wpa_supplicant
+
 *wpa_supplicant* è un tool che ci permette di stabilire una connessione wireless con chiave **WPA**. Quindi esso deve essere avviato specificando il file di configurazione dove lui si dovrà appoggiare.
 
 ```bash
 $ wpa_supplicant -B -i interface -c /etc/wpa_supplicant.conf
 ```
-**Avvio del prompt interattivo del tool wpa **
+
+#### Avvio del prompt interattivo del tool wpa
 
 *wpa_cli* è un prompt interattivo che funziona tramite *wpa_supplicant*. Da esso avverrà la configurazione della connessione tra la nostra scheda di rete Wi-Fi e il router della rete Wi-Fi su cui vogliamo collegarci. Per semplicità l'SSID della rete wireless sarà *MIOSSID*.
 
@@ -411,22 +436,67 @@ Se la connessione è avvenuta con successo, allora bisogna salvare la configuraz
 >save_config
 OK
 ```
-**Richiesta indirizzo IP**
+
+### Richiesta indirizzo IP
+
 Ultimo passaggio è quello della richiesta dell'indirizzo IP tramite il comando *dhcpcd* per finalemente partecipare alla rete, se non presente il comando deve essere installato, poichè necessario per la comunicazione con il server dhcpd del router.
 
 ```bash
 $ dhcpcd wlan0
 ```
 
+### Risoluzione dei problemi
 
-
-**Risoluzione dei problemi**
 Se per qualche motivo dopo la configurazione di *wpa_supplicant* la connessione dovesse fallire allora necessitano dei comandi per la gestione delle sessioni di *wpa_supplicant*:
 
-+ Il comando ```ps ax | grep "wpa_supplicant -B" |grep -v grep``` mi permette di visualizzare id di tutte le sessioni che sono state aperte con *wpa_supplicant*, in maniera tale da poterle gestire, visto che per esistenere una connessione con questo tool, deve essere attiva un'unica sessione di *wpa_supplicant*
++ Il comando ```ps ax | grep "wpa_supplicant -B" |grep -v grep``` permette di visualizzare l'id di tutte le sessioni che sono state aperte con *wpa_supplicant*, in maniera tale da poterle gestire, visto che per esistere una connessione con questo tool, deve essere attiva un'unica sessione di *wpa_supplicant*
 + il comando ```kill $(pgrep -f "wpa_supplicant -B")``` chiuderà tutte i processi di *wpa_supplicant*, così da darmi la possibilità di riconfigurare la rete in maniera diversa per far avvenire una effettiva connessione
+
+
+### Configurazione del server
+
+Il sito web che abbiamo creato è una piattaforma mock di condivisione di tracce audio generate dagli utenti. Prevede che gli utenti si registrino prima di poter effettuare delle ricerche o dei nuovi caricamenti.
+Il server sarà eseguito sull'OrangePi e la comunicazione avverrà sul protocollo HTTP.
+
+#### Installazione e configurazione dei software necessari
+
+Il server farà uso di Apache, MySQL, PHP5 e phpmyadmin.
+```bash
+sudo apt-get install mysql-server
+sudo apt-get install apache2
+sudo apt-get install php libapache2-mod-php
+sudo apt-get install phpmyadmin
+```
+
+Accedendo dal browser all'indirizzo `MIOIP/phpmyadmin` è possibile eseguire la configurazione iniziale automatica, alla quale sarà richiesta la scelta di una password per l'utente `phpmyadmin`.
+
+Successivamente, sarà necessario creare un database per il nostro servizio, per il quale l'utente `phpmyadmin` avrà tutti i permessi.
+
+```bash
+sudo mysql -u root
+```
+
+```sql
+CREATE DATABASE catalogomusica;
+GRANT ALL PRIVILEGES ON catalogomusica.* TO 'phpmyadmin'@'localhost';
+```
 
 ## Sviluppo del sito web
 
+#### Database
 
-## Prova
+Le tabelle del database sono state create tramite phpmyadmin. Di seguito riportiamo la tabella degli utenti e quella dei loro brani.
+
+![]()
+
+![]()
+
+### Registrazione, login e pagina utente
+
+### Home e ricerca
+
+## Prova dello sniffer
+
+### Creazione di un account
+
+### Ricerca di brani
