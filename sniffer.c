@@ -19,8 +19,8 @@ void analyze(packet buffer);
 
 void print_separator();
 void print_plaintext(packet data, dword size);
-unsigned char read_ip(print_config config, char *str);
-unsigned char read_port(print_config config, char *str);
+unsigned char read_ip(char *str);
+unsigned char read_port(char *str);
 
 struct print_config
 {
@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
     // printf("argv[%d]: %s\n", i, argv[i]);
 
     if (should_read_ip)
-      should_read_ip = read_ip(config, argv[i]);
+      should_read_ip = read_ip(argv[i]);
     else if (should_read_port)
-      should_read_port = read_port(config, argv[i]);
+      should_read_port = read_port(argv[i]);
     else if (strcmp("--noeth", argv[i]) == 0)
       config->eth = 0;
     else if (strcmp("--noip", argv[i]) == 0)
@@ -257,13 +257,13 @@ short digit(char c)
   return 48 <= c <= 57 ? c - 48 : -1;
 }
 
-unsigned char read_ip(print_config config, char *str)
+unsigned char read_ip(char *str)
 {
   short buffer[4] = {0, 0, 0, 0};
   short j = 0;
-  short k = 3;
+  short k = 0;
   unsigned char error = 0;
-  for (int i = strlen(str) - 1; i >= 0; i--, j++)
+  for (int i = 0; i < strlen(str); i++, j++)
   {
     short d = digit(str[i]);
     if (d >= 0 && j <= 2)
@@ -273,8 +273,8 @@ unsigned char read_ip(print_config config, char *str)
     else if (str[i] == '.')
     {
       j = -1;
-      if (buffer <= 255 && k > 0)
-        k -= 1;
+      if (buffer[k] <= 255 && k < 3)
+        k++;
       else
       {
         error = 1;
@@ -287,6 +287,9 @@ unsigned char read_ip(print_config config, char *str)
       break;
     }
   }
+
+  if (buffer[3] > 255)
+    error = 1;
 
   if (error)
     printf("Address '%s' is invalid\n", str);
@@ -302,7 +305,7 @@ unsigned char read_ip(print_config config, char *str)
   return 0;
 }
 
-unsigned char read_port(print_config config, char *str)
+unsigned char read_port(char *str)
 {
 
   return 0;
