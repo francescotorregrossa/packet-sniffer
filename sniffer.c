@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   if (should_read_ip)
     printf("Address missing\n");
   if (should_read_port)
-    printf("Port missing");
+    printf("Port missing\n");
 
   packet buffer = malloc(PKT_LEN);
   memset(buffer, 0, PKT_LEN);
@@ -110,7 +110,15 @@ void analyze(packet buffer)
   {
     ip_header iph = prepare_ip_header(eh->next);
 
-    if (config->contains_ip_set && (iph->source_address.a != config->contains_ip.a || iph->source_address.b != config->contains_ip.b || iph->source_address.c != config->contains_ip.c || iph->source_address.d != config->contains_ip.d) && (iph->destination_address.a != config->contains_ip.a || iph->destination_address.b != config->contains_ip.b || iph->destination_address.c != config->contains_ip.c || iph->destination_address.d != config->contains_ip.d))
+    if (config->contains_ip_set && (
+        iph->source_address.a != config->contains_ip.a || 
+        iph->source_address.b != config->contains_ip.b || 
+        iph->source_address.c != config->contains_ip.c || 
+        iph->source_address.d != config->contains_ip.d) && (
+        iph->destination_address.a != config->contains_ip.a || 
+        iph->destination_address.b != config->contains_ip.b || 
+        iph->destination_address.c != config->contains_ip.c || 
+        iph->destination_address.d != config->contains_ip.d))
     {
       free_ip_header(iph);
       free_eth_header(eh);
@@ -157,6 +165,16 @@ void analyze(packet buffer)
       {
         tcp_header tcph = prepare_tcp_header(iph->next);
 
+        if (config->contains_tcp_udp_port_set && 
+            config->contains_tcp_udp_port != tcph->source_port && 
+            config->contains_tcp_udp_port != tcph->destination_port) 
+        {
+          free_tcp_header(tcph);
+          free_ip_header(iph);
+          free_eth_header(eh);
+          return;
+        }
+
         dword psize = iph->total_length - size_ip_header(iph) - size_tcp_header(tcph);
         if (config->plainempty || psize)
         {
@@ -188,6 +206,16 @@ void analyze(packet buffer)
       if (config->udp)
       {
         udp_header udph = prepare_udp_header(iph->next);
+
+        if (config->contains_tcp_udp_port_set && 
+            config->contains_tcp_udp_port != udph->source_port && 
+            config->contains_tcp_udp_port != udph->destination_port) 
+        {
+          free_udp_header(udph);
+          free_ip_header(iph);
+          free_eth_header(eh);
+          return;
+        }
 
         dword psize = iph->total_length - size_ip_header(iph) - size_udp_header(udph);
         if (config->plainempty || psize)
@@ -320,7 +348,7 @@ unsigned char read_ip(char *str)
 unsigned char read_port(char *str)
 {
   unsigned char error = 0;
-  if (strlen(str) < 1)
+  if (strcmp(str, "") == 0)
     error = 1;
 
   dword buffer = 0;
