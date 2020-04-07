@@ -110,18 +110,11 @@ void analyze(packet buffer)
   {
     ip_header iph = prepare_ip_header(eh->next);
 
-    if (config->contains_ip_set && (
-        iph->source_address.a != config->contains_ip.a ||
-        iph->source_address.b != config->contains_ip.b || 
-        iph->source_address.c != config->contains_ip.c || 
-        iph->source_address.d != config->contains_ip.d) && (
-        iph->destination_address.a != config->contains_ip.a ||
-        iph->destination_address.b != config->contains_ip.b || 
-        iph->destination_address.c != config->contains_ip.c || 
-        iph->destination_address.d != config->contains_ip.d)) {
-          free_ip_header(iph);
-          free_eth_header(eh);
-          return;
+    if (config->contains_ip_set && (iph->source_address.a != config->contains_ip.a || iph->source_address.b != config->contains_ip.b || iph->source_address.c != config->contains_ip.c || iph->source_address.d != config->contains_ip.d) && (iph->destination_address.a != config->contains_ip.a || iph->destination_address.b != config->contains_ip.b || iph->destination_address.c != config->contains_ip.c || iph->destination_address.d != config->contains_ip.d))
+    {
+      free_ip_header(iph);
+      free_eth_header(eh);
+      return;
     }
 
     switch (iph->protocol)
@@ -278,7 +271,7 @@ unsigned char read_ip(char *str)
   unsigned char error = 0;
   if (strlen(str) < 7)
     error = 1;
-  
+
   short buffer[4] = {0, 0, 0, 0};
   short j = 0;
   short k = 0;
@@ -326,6 +319,36 @@ unsigned char read_ip(char *str)
 
 unsigned char read_port(char *str)
 {
+  unsigned char error = 0;
+  if (strlen(str) < 1)
+    error = 1;
+
+  dword buffer = 0;
+  short j = 0;
+  for (int i = 0; i < strlen(str); i++, j++)
+  {
+    short d = digit(str[i]);
+    if (d >= 0 && j <= 4)
+    {
+      buffer = buffer * 10 + d;
+    }
+    else
+    {
+      error = 1;
+      break;
+    }
+  }
+
+  if (buffer > 65535)
+    error = 1;
+
+  if (error)
+    printf("Port '%s' is invalid\n", str);
+  else
+  {
+    config->contains_tcp_udp_port_set = 1;
+    config->contains_tcp_udp_port = buffer;
+  }
 
   return 0;
 }
