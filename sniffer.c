@@ -16,10 +16,13 @@
 #define MAX_TERMINAL_LINE_LENGTH 100
 
 void analyze(packet buffer);
+
 void print_separator();
 void print_plaintext(packet data, dword size);
+unsigned char read_ip(print_config config, char *str);
+unsigned char read_port(print_config config, char *str);
 
-typedef struct
+struct print_config
 {
   unsigned char eth : 1,
       ip : 1,
@@ -29,37 +32,58 @@ typedef struct
       plain : 1,
       plainempty : 1,
       unknown : 1;
-} * print_config;
+
+  ip_address contains_ip;
+  word contains_tcp_udp_port;
+  unsigned char contains_ip_set : 1,
+      contains_tcp_udp_port_set : 1, : 6;
+};
+
+typedef struct print_config *print_config;
 
 print_config config;
 
 int main(int argc, char *argv[])
 {
 
-  config = malloc(sizeof(unsigned char));
+  config = malloc(sizeof(struct print_config));
   config->eth = config->ip = config->icmp = config->tcp = config->udp =
       config->plain = config->plainempty = config->unknown = 1;
+  config->contains_ip_set = config->contains_tcp_udp_port_set = 0;
+
+  unsigned char should_read_ip = 0;
+  unsigned char should_read_port = 0;
 
   for (int i = 1; i < argc; ++i)
   {
     // printf("argv[%d]: %s\n", i, argv[i]);
 
-    if (strcmp("--noeth", argv[i]) == 0)
+    if (should_read_ip)
+      should_read_ip = read_ip(config, argv[i]);
+    else if (should_read_port)
+      should_read_port = read_port(config, argv[i]);
+    else if (strcmp("--noeth", argv[i]) == 0)
       config->eth = 0;
-    if (strcmp("--noip", argv[i]) == 0)
+    else if (strcmp("--noip", argv[i]) == 0)
       config->ip = 0;
-    if (strcmp("--noicmp", argv[i]) == 0)
+    else if (strcmp("--noicmp", argv[i]) == 0)
       config->icmp = 0;
-    if (strcmp("--notcp", argv[i]) == 0)
+    else if (strcmp("--notcp", argv[i]) == 0)
       config->tcp = 0;
-    if (strcmp("--noudp", argv[i]) == 0)
+    else if (strcmp("--noudp", argv[i]) == 0)
       config->udp = 0;
-    if (strcmp("--noplain", argv[i]) == 0)
+    else if (strcmp("--noplain", argv[i]) == 0)
       config->plain = 0;
-    if (strcmp("--noplainempty", argv[i]) == 0)
+    else if (strcmp("--noplainempty", argv[i]) == 0)
       config->plainempty = 0;
-    if (strcmp("--nounknown", argv[i]) == 0)
+    else if (strcmp("--nounknown", argv[i]) == 0)
       config->unknown = 0;
+    else if (strcmp("--ip", argv[i]) == 0)
+      should_read_ip = 1;
+    else if (strcmp("--port", argv[i]) == 0)
+      should_read_port = 1;
+    else
+      printf("Argument '%s' is invalid\n", argv[i]);
   }
 
   packet buffer = malloc(PKT_LEN);
@@ -226,6 +250,62 @@ void analyze(packet buffer)
   }
 
   free_eth_header(eh);
+}
+
+short digit(char c)
+{
+  return 48 <= c <= 57 ? c - 48 : -1;
+}
+
+unsigned char read_ip(print_config config, char *str)
+{
+  short buffer[4] = {0, 0, 0, 0};
+  short j = 0;
+  short k = 3;
+  unsigned char error = 0;
+  for (int i = strlen(str) - 1; i >= 0; i--, j++)
+  {
+    short d = digit(str[i]);
+    if (d >= 0 && j <= 2)
+    {
+      buffer[k] = buffer[k] * 10 + d;
+    }
+    else if (str[i] == '.')
+    {
+      j = -1;
+      if (buffer <= 255 && k > 0)
+        k -= 1;
+      else
+      {
+        error = 1;
+        break;
+      }
+    }
+    else
+    {
+      error = 1;
+      break;
+    }
+  }
+
+  if (error)
+    printf("Address '%s' is invalid\n", str);
+  else
+  {
+    config->contains_ip_set = 1;
+    config->contains_ip.a = buffer[0];
+    config->contains_ip.b = buffer[1];
+    config->contains_ip.c = buffer[2];
+    config->contains_ip.d = buffer[3];
+  }
+
+  return 0;
+}
+
+unsigned char read_port(print_config config, char *str)
+{
+
+  return 0;
 }
 
 void print_separator()
