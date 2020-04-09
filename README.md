@@ -34,11 +34,13 @@ Così, accedendo e utilizzando il sito web tramite client, abbiamo potuto simula
     - [Installazione e configurazione dei software necessari](#installazione-e-configurazione-dei-software-necessari)
 - [Sviluppo del sito web](#sviluppo-del-sito-web)
     - [Database](#database)
-  - [Registrazione, login e pagina utente](#registrazione-login-e-pagina-utente)
-  - [Home e ricerca](#home-e-ricerca)
+  - [Login, Sessione, gestione database e logout](#login-sessione-gestione-database-e-logout)
+  - [Registrazione e pagina utente](#Registrazione-e-pagina-utente)
+  - [Home, ricerca e scheda brano](#Home-ricerca-e-scheda-brano)
+  - [Aggiunzione dei brani](#Aggiunzione-dei-brani)
 - [Prova dello sniffer](#prova-dello-sniffer)
-  - [Creazione di un account](#creazione-di-un-account)
-  - [Ricerca di brani](#ricerca-di-brani)
+  - [Creazione di un account](#creazione-di-un-account)?
+  - [Ricerca di brani](#ricerca-di-brani)?
 
 <!-- /TOC -->
 
