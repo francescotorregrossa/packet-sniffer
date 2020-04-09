@@ -16,10 +16,13 @@
 #define MAX_TERMINAL_LINE_LENGTH 100
 
 void analyze(packet buffer);
+
 void print_separator();
 void print_plaintext(packet data, dword size);
+unsigned char read_ip(char *str);
+unsigned char read_port(char *str);
 
-typedef struct
+struct print_config
 {
   unsigned char eth : 1,
       ip : 1,
@@ -29,38 +32,61 @@ typedef struct
       plain : 1,
       plainempty : 1,
       unknown : 1;
-} * print_config;
+
+  ip_address contains_ip;
+  word contains_tcp_udp_port;
+  unsigned char contains_ip_set : 1,
+      contains_tcp_udp_port_set : 1, : 6;
+};
+
+typedef struct print_config *print_config;
 
 print_config config;
 
 int main(int argc, char *argv[])
 {
 
-  config = malloc(sizeof(unsigned char));
+  config = malloc(sizeof(struct print_config));
   config->eth = config->ip = config->icmp = config->tcp = config->udp =
       config->plain = config->plainempty = config->unknown = 1;
+  config->contains_ip_set = config->contains_tcp_udp_port_set = 0;
+
+  unsigned char should_read_ip = 0;
+  unsigned char should_read_port = 0;
 
   for (int i = 1; i < argc; ++i)
   {
-    // printf("argv[%d]: %s\n", i, argv[i]);
-
-    if (strcmp("--noeth", argv[i]) == 0)
+    if (should_read_ip)
+      should_read_ip = read_ip(argv[i]);
+    else if (should_read_port)
+      should_read_port = read_port(argv[i]);
+    else if (strcmp("--noeth", argv[i]) == 0)
       config->eth = 0;
-    if (strcmp("--noip", argv[i]) == 0)
+    else if (strcmp("--noip", argv[i]) == 0)
       config->ip = 0;
-    if (strcmp("--noicmp", argv[i]) == 0)
+    else if (strcmp("--noicmp", argv[i]) == 0)
       config->icmp = 0;
-    if (strcmp("--notcp", argv[i]) == 0)
+    else if (strcmp("--notcp", argv[i]) == 0)
       config->tcp = 0;
-    if (strcmp("--noudp", argv[i]) == 0)
+    else if (strcmp("--noudp", argv[i]) == 0)
       config->udp = 0;
-    if (strcmp("--noplain", argv[i]) == 0)
+    else if (strcmp("--noplain", argv[i]) == 0)
       config->plain = 0;
-    if (strcmp("--noplainempty", argv[i]) == 0)
+    else if (strcmp("--noplainempty", argv[i]) == 0)
       config->plainempty = 0;
-    if (strcmp("--nounknown", argv[i]) == 0)
+    else if (strcmp("--nounknown", argv[i]) == 0)
       config->unknown = 0;
+    else if (strcmp("--ip", argv[i]) == 0)
+      should_read_ip = 1;
+    else if (strcmp("--port", argv[i]) == 0)
+      should_read_port = 1;
+    else
+      printf("Argument '%s' is invalid\n", argv[i]);
   }
+  if (should_read_ip)
+    printf("Address missing\n");
+  if (should_read_port)
+    printf("Port missing\n");
 
   packet buffer = malloc(PKT_LEN);
   memset(buffer, 0, PKT_LEN);
@@ -83,6 +109,21 @@ void analyze(packet buffer)
   if (eh->type_code == ntohs(ETH_P_IP))
   {
     ip_header iph = prepare_ip_header(eh->next);
+
+    if (config->contains_ip_set && (
+        iph->source_address.a != config->contains_ip.a || 
+        iph->source_address.b != config->contains_ip.b || 
+        iph->source_address.c != config->contains_ip.c || 
+        iph->source_address.d != config->contains_ip.d) && (
+        iph->destination_address.a != config->contains_ip.a || 
+        iph->destination_address.b != config->contains_ip.b || 
+        iph->destination_address.c != config->contains_ip.c || 
+        iph->destination_address.d != config->contains_ip.d))
+    {
+      free_ip_header(iph);
+      free_eth_header(eh);
+      return;
+    }
 
     switch (iph->protocol)
     {
@@ -124,6 +165,16 @@ void analyze(packet buffer)
       {
         tcp_header tcph = prepare_tcp_header(iph->next);
 
+        if (config->contains_tcp_udp_port_set && 
+            config->contains_tcp_udp_port != tcph->source_port && 
+            config->contains_tcp_udp_port != tcph->destination_port) 
+        {
+          free_tcp_header(tcph);
+          free_ip_header(iph);
+          free_eth_header(eh);
+          return;
+        }
+
         dword psize = iph->total_length - size_ip_header(iph) - size_tcp_header(tcph);
         if (config->plainempty || psize)
         {
@@ -155,6 +206,16 @@ void analyze(packet buffer)
       if (config->udp)
       {
         udp_header udph = prepare_udp_header(iph->next);
+
+        if (config->contains_tcp_udp_port_set && 
+            config->contains_tcp_udp_port != udph->source_port && 
+            config->contains_tcp_udp_port != udph->destination_port) 
+        {
+          free_udp_header(udph);
+          free_ip_header(iph);
+          free_eth_header(eh);
+          return;
+        }
 
         dword psize = iph->total_length - size_ip_header(iph) - size_udp_header(udph);
         if (config->plainempty || psize)
@@ -226,6 +287,98 @@ void analyze(packet buffer)
   }
 
   free_eth_header(eh);
+}
+
+short digit(char c)
+{
+  return 48 <= c <= 57 ? c - 48 : -1;
+}
+
+unsigned char read_ip(char *str)
+{
+  unsigned char error = 0;
+  if (strlen(str) < 7)
+    error = 1;
+
+  short buffer[4] = {0, 0, 0, 0};
+  short j = 0;
+  short k = 0;
+  for (int i = 0; i < strlen(str); i++, j++)
+  {
+    short d = digit(str[i]);
+    if (d >= 0 && j <= 2)
+    {
+      buffer[k] = buffer[k] * 10 + d;
+    }
+    else if (str[i] == '.')
+    {
+      j = -1;
+      if (buffer[k] <= 255 && k < 3)
+        k++;
+      else
+      {
+        error = 1;
+        break;
+      }
+    }
+    else
+    {
+      error = 1;
+      break;
+    }
+  }
+
+  if (buffer[3] > 255)
+    error = 1;
+
+  if (error)
+    printf("Address '%s' is invalid\n", str);
+  else
+  {
+    config->contains_ip_set = 1;
+    config->contains_ip.a = buffer[0];
+    config->contains_ip.b = buffer[1];
+    config->contains_ip.c = buffer[2];
+    config->contains_ip.d = buffer[3];
+  }
+
+  return 0;
+}
+
+unsigned char read_port(char *str)
+{
+  unsigned char error = 0;
+  if (strcmp(str, "") == 0)
+    error = 1;
+
+  dword buffer = 0;
+  short j = 0;
+  for (int i = 0; i < strlen(str); i++, j++)
+  {
+    short d = digit(str[i]);
+    if (d >= 0 && j <= 4)
+    {
+      buffer = buffer * 10 + d;
+    }
+    else
+    {
+      error = 1;
+      break;
+    }
+  }
+
+  if (buffer > 65535)
+    error = 1;
+
+  if (error)
+    printf("Port '%s' is invalid\n", str);
+  else
+  {
+    config->contains_tcp_udp_port_set = 1;
+    config->contains_tcp_udp_port = buffer;
+  }
+
+  return 0;
 }
 
 void print_separator()
