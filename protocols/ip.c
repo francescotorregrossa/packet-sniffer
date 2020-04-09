@@ -18,7 +18,6 @@ ip_header prepare_ip_header(packet data)
 
   header->total_length = switch_encoding_w(header->total_length);
   header->id = switch_encoding_w(header->id);
-  // todo fragment offset encoding
   header->checksum = switch_encoding_w(header->checksum);
 
   return header;
