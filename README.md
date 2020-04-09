@@ -33,14 +33,15 @@ Così, accedendo e utilizzando il sito web tramite client, abbiamo potuto simula
   - [Configurazione del server](#configurazione-del-server)
     - [Installazione e configurazione dei software necessari](#installazione-e-configurazione-dei-software-necessari)
 - [Sviluppo del sito web](#sviluppo-del-sito-web)
-    - [Database](#database)
+  - [Database](#database)
+    - [Tabella utenti](#tabella-utenti)
+    - [Tabella autori](#tabella-autori)
+    - [Tabella brani](#tabella-brani)
   - [Login, Sessione, gestione database e logout](#login-sessione-gestione-database-e-logout)
-  - [Registrazione e pagina utente](#Registrazione-e-pagina-utente)
-  - [Home, ricerca e scheda brano](#Home-ricerca-e-scheda-brano)
-  - [Aggiunzione dei brani](#Aggiunzione-dei-brani)
+  - [Registrazione e pagina utente](#registrazione-e-pagina-utente)
+  - [Home, ricerca e scheda brano](#home-ricerca-e-scheda-brano)
+  - [Aggiunzione dei brani](#aggiunzione-dei-brani)
 - [Prova dello sniffer](#prova-dello-sniffer)
-  - [Creazione di un account](#creazione-di-un-account)?
-  - [Ricerca di brani](#ricerca-di-brani)?
 
 <!-- /TOC -->
 
@@ -500,6 +501,7 @@ Le tabelle del database sono state create tramite phpmyadmin. Di seguito riporti
 ```
 
 #### Tabella utenti
+
 ```
 +----+----------+----------+--------------------+--------+-------------+-------+--------+
 | id | username | password | email              | Nome   | Cognome     | admin | avatar |
@@ -508,7 +510,9 @@ Le tabelle del database sono state create tramite phpmyadmin. Di seguito riporti
 | 12 | frank    | linux    | frango@pr.it       | Frango | Torregrossa |     0 | NULL   |
 +----+----------+----------+--------------------+--------+-------------+-------+--------+
 ```
+
 #### Tabella autori
+
 ```
 +----+------------+-------------------+------+
 | id | Nome       | Genere            | Eta  |
@@ -516,7 +520,9 @@ Le tabelle del database sono state create tramite phpmyadmin. Di seguito riporti
 |  1 | Pink Floyd | Rock Psichedelico | NULL |
 +----+------------+-------------------+------+
 ```
+
 #### Tabella brani
+
 ```
 +----+--------------------+--------------------+------+--------+-----------------+--------------------------+
 | id | Titolo             | Album              | Anno | autore | file            | immagine                 |
@@ -525,23 +531,25 @@ Le tabelle del database sono state create tramite phpmyadmin. Di seguito riporti
 +----+--------------------+--------------------+------+--------+-----------------+--------------------------+
 ```
 
-![]()
-
-![]()
-
 ### Login, Sessione, gestione database e logout
-Quando un client per la prima volta fa una richiesta al server effettuerà una connessione al database tramite uno script php.</br>
-La sessione viene creata non appena un utente compila correttamente il form di login tramite l'email e la  password del suo profilo. Essa serve per identificare l'utente all'interno delle varie pagine del sito web.</br>
+
+Quando un client per la prima volta fa una richiesta al server effettuerà una connessione al database tramite uno script php.
+
+La sessione viene creata non appena un utente compila correttamente il form di login tramite l'email e la  password del suo profilo. Essa serve per identificare l'utente all'interno delle varie pagine del sito web.
+
 Il logout viene effettuato da uno script php che cancella la sessione, non permettendo all'untente di entrare nelle pagine interne della pagina.
 **foto login**
 
 ### Registrazione e pagina utente
+
 Il form all'interno della pagina di registrazione permette di effettuare una registrazioine all'interno del sito, creando un profilo utente. Successivamente l'untente sarà reindirizzato alla Home page.
 
 Nella pagina utente è presente un riepilogo delle informazioni sensibili che compongono l'account compresa l'immagine del profilo. All'interno di questa pagina è presente un pulsante "Modifica" che permette di modificare le informazioni del profilo dell'utente, compresa la password. La pagina di modifica è stata realizzata tramite un form pre-compilato dalle informazioni dell'utente, che esso stesso può modificare e poi infine farne il submit.
 
 ### Home, ricerca e scheda brano
-Nella Home page, coome in ogni pagina all'interno del sito è presente una navigation-bar che permette all'utente di navigare all'interno del sito.</br>
+
+Nella Home page, come in ogni pagina all'interno del sito è presente una navigation-bar che permette all'utente di navigare all'interno del sito.
+
 La pagina di ricerca è composta da un form dove è possibile inserire diverse informazioni riguardo al brano o all'autore da ricercare. Dopo aver effettuato il submit lo script comporrà una query per il database e successivamente ne saranno mostrati i risultati componendo codice HTML e CSS. I risultati sono collegati alle proprie pagine di "scheda brano" dove è appunto possibile ascoltarli tramite HTML5. Di seguito le parti principali del codice della pagina di ricerca:
 ```html
 <html>
@@ -669,7 +677,8 @@ if(isset($_POST["cerca"]))
 ```
 
 ### Aggiunzione dei brani
-Gli admin hanno la possibilità di aggiungere brani. Questo è possibile tramite l'apposita pagina composta da un form in cui è possibile inserire tutti i dettagli del brano. Inoltre tramite è predisposta una una sezione dove è possibile effettuare l'upload del brano.
+
+Gli admin hanno la possibilità di aggiungere brani. Questo è possibile tramite l'apposita pagina composta da un form in cui è possibile inserire tutti i dettagli del brano. Inoltre è predisposta una una sezione dove è possibile effettuare l'upload del brano.
 
 
 ## Prova dello sniffer
