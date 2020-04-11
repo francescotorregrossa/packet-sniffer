@@ -537,16 +537,17 @@ Quando un client per la prima volta fa una richiesta al server effettuerà una c
 
 La sessione viene creata non appena un utente compila correttamente il form di login tramite l'email e la  password del suo profilo. Essa serve per identificare l'utente all'interno delle varie pagine del sito web.
 
-Il logout viene effettuato da uno script php che cancella la sessione, non permettendo all'untente di entrare nelle pagine interne della pagina.</br>
-![login](login.png)
-
+Il logout viene effettuato da uno script php che cancella la sessione, non permettendo all'untente di entrare nelle pagine interne della pagina.
 
 ### Registrazione e pagina utente
 
 Il form all'interno della pagina di registrazione permette di effettuare una registrazioine all'interno del sito, creando un profilo utente. Successivamente l'untente sarà reindirizzato alla Home page.
 
 Nella pagina utente è presente un riepilogo delle informazioni sensibili che compongono l'account compresa l'immagine del profilo. All'interno di questa pagina è presente un pulsante "Modifica" che permette di modificare le informazioni del profilo dell'utente, compresa la password. La pagina di modifica è stata realizzata tramite un form pre-compilato dalle informazioni dell'utente, che esso stesso può modificare e poi infine farne il submit.
-![login](pagina_utente.png)
+
+|          Login           |          Pagina Utente          |
+| :----------------------: | :-----------------------------: |
+| ![login](imgs/login.png) | ![user](imgs/pagina_utente.png) |
 
 ### Home, ricerca e scheda brano
 
@@ -675,13 +676,12 @@ if(isset($_POST["cerca"]))
 
 </body>
 </html>
-
 ```
-**Ricerca**
-![login](cerca.png)</br>
 
-**Scheda brano**
-![login](scheda_brano.png)
+|          Ricerca          |          Scheda brano           |
+| :-----------------------: | :-----------------------------: |
+| ![search](imgs/cerca.png) | ![track](imgs/scheda_brano.png) |
+
 ### Aggiunzione dei brani
 
 Gli admin hanno la possibilità di aggiungere brani. Questo è possibile tramite l'apposita pagina composta da un form in cui è possibile inserire tutti i dettagli del brano. Inoltre è predisposta una una sezione dove è possibile effettuare l'upload del brano.
@@ -689,3 +689,31 @@ Gli admin hanno la possibilità di aggiungere brani. Questo è possibile tramite
 
 ## Prova dello sniffer
 
+Per testare il funzionamento dello sniffer, lo abbiamo avviato insieme al server web. Dal momento che stiamo cercando pacchetti di tipo HTTP contenenti dei dati sensibili, possiamo lanciare lo sniffer da remoto (tramite *ssh*) con i seguenti filtri
+
+```bash
+gcc sniffer.c protocols/*.c protocols/*.h -o sniff
+sudo ./sniff --noicmp --noudp --nounknown --noplainempty --port 80
+```
+
+Così facendo, l'output conterrà solamente pacchetti TCP (anche con gli header IP ed Ethernet) che hanno un contenuto non vuoto. Inoltre, sappiamo che la porta del server sarà 80, perciò terremo solo conto delle comunicazioni da e verso quella porta. Una volta individuato l'indirizzo IP del server, potremmo anche filtrare l'output con `--ip`.
+
+In questo esempio, un amministratore del sito sta eseguendo il login con le sue credenziali. Dallo sniffer possiamo vedere la richiesta POST contenente i dati dell'utente, separata in due pacchetti. Inoltre, possiamo leggere il codice di sessione PHP che questo utente sta usando.
+
+| Richiesta POST tramite il form di accesso |
+| :---------------------------------------: |
+| ![](imgs/img4.png) |
+| ![](imgs/img5.png) |
+
+Abbiamo poi avviato un altro browser e caricato il sito web. Anche se ancora non abbiamo fatto l'accesso, PHP ci fornisce un cookie di sessione.
+
+| PHPSESSID di un utente non registrato |
+| :-----------------------------------: |
+| ![](imgs/img1.png) |
+
+È possibile modificare il valore del cookie copiando quello ottenuto dallo sniffer, così facendo quando la pagina sarà ricaricata il web server non potrà distinguerci dall'amministratore.
+
+| Sostituzione del PHPSESSID |
+| :------------------------: |
+| ![](imgs/img2.png) |
+| ![](imgs/img3.png) |
