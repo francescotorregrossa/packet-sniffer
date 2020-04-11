@@ -8,14 +8,14 @@
 typedef struct
 {
   byte
-      cwr : 1,
-      ece : 1,
-      urg : 1,
-      ack : 1,
-      psh : 1,
-      rst : 1,
+      fin : 1,
       syn : 1,
-      fin : 1;
+      rst : 1,
+      psh : 1,
+      ack : 1,
+      urg : 1,
+      ece : 1,
+      cwr : 1;
 } tcp_flags;
 
 struct tcp_header
