@@ -211,7 +211,6 @@ ip_header prepare_ip_header(packet data)
 
   header->total_length = switch_encoding_w(header->total_length);
   header->id = switch_encoding_w(header->id);
-  // todo fragment offset encoding
   header->checksum = switch_encoding_w(header->checksum);
 
   return header;
@@ -244,8 +243,8 @@ dword size_ip_header(ip_header header) {
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 |                       acknowledgment number                         |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
-|       |  data  | c|e|u|a|p|r|s|f |                                  |
-|0 0 0 0| offset | w|c|r|c|s|s|y|i |              window              |
+| data  |        | c|e|u|a|p|r|s|f |                                  |
+|offset |0 0 0 0 | w|c|r|c|s|s|y|i |              window              |
 |       |        | r|e|g|k|h|t|n|n |                                  |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 |            checksum              |           urgent pointer         |
@@ -554,7 +553,7 @@ Nella pagina utente è presente un riepilogo delle informazioni sensibili che co
 Nella Home page, come in ogni pagina all'interno del sito è presente una navigation-bar che permette all'utente di navigare all'interno del sito.
 
 La pagina di ricerca è composta da un form dove è possibile inserire diverse informazioni riguardo al brano o all'autore da ricercare. Dopo aver effettuato il submit lo script comporrà una query per il database e successivamente ne saranno mostrati i risultati componendo codice HTML e CSS. I risultati sono collegati alle proprie pagine di "scheda brano" dove è appunto possibile ascoltarli tramite HTML5. Di seguito le parti principali del codice della pagina di ricerca:
-```html
+```php
 <html>
 <head>
 <!-- ... -->
