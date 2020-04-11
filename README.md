@@ -211,6 +211,7 @@ ip_header prepare_ip_header(packet data)
 
   header->total_length = switch_encoding_w(header->total_length);
   header->id = switch_encoding_w(header->id);
+  // todo fragment offset encoding
   header->checksum = switch_encoding_w(header->checksum);
 
   return header;
@@ -243,8 +244,8 @@ dword size_ip_header(ip_header header) {
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 |                       acknowledgment number                         |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
-|  data |        | c|e|u|a|p|r|s|f |                                  |
-| offset|0 0 0 0 | w|c|r|c|s|s|y|i |              window              |
+|       |  data  | c|e|u|a|p|r|s|f |                                  |
+|0 0 0 0| offset | w|c|r|c|s|s|y|i |              window              |
 |       |        | r|e|g|k|h|t|n|n |                                  |
 +-+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+- + -+-+-+-+-+-+-+-+
 |            checksum              |           urgent pointer         |
@@ -536,14 +537,16 @@ Quando un client per la prima volta fa una richiesta al server effettuerà una c
 
 La sessione viene creata non appena un utente compila correttamente il form di login tramite l'email e la  password del suo profilo. Essa serve per identificare l'utente all'interno delle varie pagine del sito web.
 
-Il logout viene effettuato da uno script php che cancella la sessione, non permettendo all'untente di entrare nelle pagine interne della pagina.
-**foto login**
+Il logout viene effettuato da uno script php che cancella la sessione, non permettendo all'untente di entrare nelle pagine interne della pagina.</br>
+![login](login.png)
+
 
 ### Registrazione e pagina utente
 
 Il form all'interno della pagina di registrazione permette di effettuare una registrazioine all'interno del sito, creando un profilo utente. Successivamente l'untente sarà reindirizzato alla Home page.
 
 Nella pagina utente è presente un riepilogo delle informazioni sensibili che compongono l'account compresa l'immagine del profilo. All'interno di questa pagina è presente un pulsante "Modifica" che permette di modificare le informazioni del profilo dell'utente, compresa la password. La pagina di modifica è stata realizzata tramite un form pre-compilato dalle informazioni dell'utente, che esso stesso può modificare e poi infine farne il submit.
+![login](pagina_utente.png)
 
 ### Home, ricerca e scheda brano
 
@@ -674,7 +677,11 @@ if(isset($_POST["cerca"]))
 </html>
 
 ```
+**Ricerca**
+![login](cerca.png)</br>
 
+**Scheda brano**
+![login](scheda_brano.png)
 ### Aggiunzione dei brani
 
 Gli admin hanno la possibilità di aggiungere brani. Questo è possibile tramite l'apposita pagina composta da un form in cui è possibile inserire tutti i dettagli del brano. Inoltre è predisposta una una sezione dove è possibile effettuare l'upload del brano.
