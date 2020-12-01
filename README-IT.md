@@ -1,21 +1,49 @@
+
 # Progetto Reti di calcolatori — Packet Sniffer
-
 _**di Aldo Fumagalli e Francesco Torregrossa, A.A. 19/20**_
-
-[toc]
-
-<div style="page-break-after: always; break-after: page;"></div>
-
-## Introduzione
 
 Abbiamo realizzato un programma in C che ascolta e analizza tutti i pacchetti ricevuti dal computer, permettendo di mostrare dettagli come la sorgente, il destinatario, i protocolli utilizzati, e anche i contenuti che essi trasportano.
 
 Successivamente, abbiamo caricato il programma su un dispositivo [OrangePi](http://www.orangepi.org) munito di una scheda di rete wireless TP-Link [TL-WN722N](https://www.tp-link.com/it/home-networking/adapter/tl-wn722n/).</br>
-Abbiamo anche preparato un sito web fittizio in PHP, HTML e CSS (Client/Server) che simula una piattaforma di audio streming con le funzionalità di accesso, registrazione e uso generale.
+Abbiamo anche preparato un sito web fittizio in PHP, HTML e CSS (Client/Server) che simula una piattaforma di audio streaming con le funzionalità di accesso, registrazione e uso generale.
 
 Così, accedendo e utilizzando il sito web tramite client, abbiamo potuto simulare l'invio di alcuni pacchetti che sono poi stati analizzati dal nostro programma, attivo sull'OrangePi. Questo ci ha permesso di accedere ai dati sensibili e di verificare la correttezza delle informazioni ottenute dal programma stesso.
 
-<div style="page-break-after: always; break-after: page;"></div>
+<!-- TOC depthfrom:2 depthto:4 -->
+
+- [Sviluppo del programma](#sviluppo-del-programma)
+  - [Protocolli e strutture dati](#protocolli-e-strutture-dati)
+    - [Ethernet](#ethernet)
+    - [IPv4](#ipv4)
+    - [ICMP](#icmp)
+    - [TCP](#tcp)
+    - [UDP](#udp)
+  - [Ricezione dei pacchetti](#ricezione-dei-pacchetti)
+  - [Analisi dei pacchetti](#analisi-dei-pacchetti)
+- [Preparazione dell'OrangePi](#preparazione-dellorangepi)
+  - [Verifica dei driver della scheda di rete](#verifica-dei-driver-della-scheda-di-rete)
+  - [Trovare il nome della scheda di rete](#trovare-il-nome-della-scheda-di-rete)
+    - [Verifica avvenuta creazione interfaccia wireless](#verifica-avvenuta-creazione-interfaccia-wireless)
+  - [Attivazione dell'interfaccia](#attivazione-dellinterfaccia)
+    - [Creazione file di configurazione](#creazione-file-di-configurazione)
+    - [Avvio wpasupplicant](#avvio-wpasupplicant)
+    - [Avvio del prompt interattivo del tool wpa](#avvio-del-prompt-interattivo-del-tool-wpa)
+  - [Richiesta indirizzo IP](#richiesta-indirizzo-ip)
+  - [Risoluzione dei problemi](#risoluzione-dei-problemi)
+  - [Configurazione del server](#configurazione-del-server)
+    - [Installazione e configurazione dei software necessari](#installazione-e-configurazione-dei-software-necessari)
+- [Sviluppo del sito web](#sviluppo-del-sito-web)
+  - [Database](#database)
+    - [Tabella utenti](#tabella-utenti)
+    - [Tabella autori](#tabella-autori)
+    - [Tabella brani](#tabella-brani)
+  - [Login, Sessione, gestione database e logout](#login-sessione-gestione-database-e-logout)
+  - [Registrazione e pagina utente](#registrazione-e-pagina-utente)
+  - [Home, ricerca e scheda brano](#home-ricerca-e-scheda-brano)
+  - [Aggiunzione dei brani](#aggiunzione-dei-brani)
+- [Prova dello sniffer](#prova-dello-sniffer)
+
+<!-- /TOC -->
 
 ## Sviluppo del programma
 
@@ -309,10 +337,7 @@ void analyze(packet buffer)
 }
 ```
 
-<div style="page-break-after: always; break-after: page;"></div>
-
 ## Preparazione dell'OrangePi
-
 l'OrangePi è una scheda **Open-Source** basata su architettura **ARM**, su questa scheda possono essere eseguite distribuzioni linux e quella che abbiamo utilizzzato noi è  **Armbian**, una distribuzione di linux creata per dispositivi che funzionano con architetture **ARM**.
 
 Ciò che segue è la configurazione della scheda di rete wireless e quindi delle impostazioni di rete dell'OrangePi. Essa è suddivisa in più fasi procedurali, dove la non riuscita di una qualsiasi di esse causa il non poter procedere alla fase successiva, e quindi in queste situazioni bisogna intevenire con strumenti di risuluzione per poter, poi, riprendere con la normale procedura.
@@ -349,8 +374,6 @@ wlan0  unassociated  Nickname:"<WIFI@REALTEK>"
 $ ip link set dev wlan0 up
 ```
 Non restituendo nessun errore, il terminale conferma l'avvenuta creazione.
-
-<div style="page-break-after: always; break-after: page;"></div>
 
 ### Attivazione dell'interfaccia
 
@@ -432,6 +455,7 @@ Se per qualche motivo dopo la configurazione di *wpa_supplicant* la connessione 
 + Il comando ```ps ax | grep "wpa_supplicant -B" |grep -v grep``` permette di visualizzare l'id di tutte le sessioni che sono state aperte con *wpa_supplicant*, in maniera tale da poterle gestire, visto che per esistere una connessione con questo tool, deve essere attiva un'unica sessione di *wpa_supplicant*
 + il comando ```kill $(pgrep -f "wpa_supplicant -B")``` chiuderà tutte i processi di *wpa_supplicant*, così da darmi la possibilità di riconfigurare la rete in maniera diversa per far avvenire una effettiva connessione
 
+
 ### Configurazione del server
 
 Il sito web che abbiamo creato è una piattaforma mock di condivisione di tracce audio generate dagli utenti. Prevede che gli utenti si registrino prima di poter effettuare delle ricerche o dei nuovi caricamenti.
@@ -460,36 +484,50 @@ CREATE DATABASE catalogomusica;
 GRANT ALL PRIVILEGES ON catalogomusica.* TO 'phpmyadmin'@'localhost';
 ```
 
-<div style="page-break-after: always; break-after: page;"></div>
-
 ## Sviluppo del sito web
 
 ### Database
 
 Le tabelle del database sono state create tramite phpmyadmin. Di seguito riportiamo la tabella degli utenti, quella degli autori e quella dei loro brani.
+```
++--------------------------+
+| catalogomusica           |
++--------------------------+
+| autori                   |
+| brani                    |
+| utenti                   |
++--------------------------+
+```
+
+#### Tabella utenti
 
 ```
-# utenti
 +----+----------+----------+--------------------+--------+-------------+-------+--------+
 | id | username | password | email              | Nome   | Cognome     | admin | avatar |
 +----+----------+----------+--------------------+--------+-------------+-------+--------+
 |  1 | ikros    | linux    | aldof98@hotmail.it | Aldo   | Fumagalli   |     1 | NULL   |
 | 12 | frank    | linux    | frango@pr.it       | Frango | Torregrossa |     0 | NULL   |
 +----+----------+----------+--------------------+--------+-------------+-------+--------+
+```
 
-# autori
+#### Tabella autori
+
+```
 +----+------------+-------------------+------+
 | id | Nome       | Genere            | Eta  |
 +----+------------+-------------------+------+
 |  1 | Pink Floyd | Rock Psichedelico | NULL |
 +----+------------+-------------------+------+
+```
 
-# brani
-+----+--------------------+----------------------+------+--------+--------+----------+
-| id | Titolo             | Album                | Anno | autore | file   | immagine |
-+----+--------------------+----------------------+------+-----------------+----------+
-|  1 | wish you were here | wish you were here   | 1975 |      1 | a.mp3  | a.png    |
-+----+--------------------+----------------------+------+--------+--------+----------+
+#### Tabella brani
+
+```
++----+--------------------+--------------------+------+--------+-----------------+--------------------------+
+| id | Titolo             | Album              | Anno | autore | file            | immagine                 |
++----+--------------------+--------------------+------+--------+-----------------+--------------------------+
+|  1 | wish you were here | wish you were here | 1975 |      1 | brani/horse.mp3 | copertina/Pink_Floyd.png |
++----+--------------------+--------------------+------+--------+-----------------+--------------------------+
 ```
 
 ### Login, Sessione, gestione database e logout
@@ -506,8 +544,6 @@ Il form all'interno della pagina di registrazione permette di effettuare una reg
 
 Nella pagina utente è presente un riepilogo delle informazioni sensibili che compongono l'account compresa l'immagine del profilo. All'interno di questa pagina è presente un pulsante "Modifica" che permette di modificare le informazioni del profilo dell'utente, compresa la password. La pagina di modifica è stata realizzata tramite un form pre-compilato dalle informazioni dell'utente, che esso stesso può modificare e poi infine farne il submit.
 
-<div style="page-break-after: always; break-after: page;"></div>
-
 |          Login           |          Pagina Utente          |
 | :----------------------: | :-----------------------------: |
 | ![login](imgs/login.png) | ![user](imgs/pagina_utente.png) |
@@ -520,94 +556,122 @@ La pagina di ricerca è composta da un form dove è possibile inserire diverse i
 ```php
 <html>
 <head>
-
+<!-- ... -->
 <!-- ... -->
 
   <!-- Search form -->
-  <form action="<?php $_SERVER['PHP_SELF'] ?>" method="post" autocomplete="off">
-    <p><input type="text" placeholder="Titolo" name="titolo"></p>
-    <p><input type="text" placeholder="Autore" name="autore"></p>
-    <p><input type="text" placeholder="Album" name="album"></p>
-    <p><input type="text" placeholder="Anno" name="anno" maxlength="4"></p>
-    <p>
-      <button type="submit" name="cerca">
-        <i class="fa fa-search"></i> CERCA
-      </button>
-      <button type="reset">
-        <i class="fa fa-trash-o" aria-hidden="true"></i> CANCELLA
-      </button>
-    </p>
-  </form>
-
-<!-- ... -->
+    <div class="w3-content w3-justify w3-text-grey w3-padding-64">
+      <h2 class="w3-text-light-grey">Cerca brano</h2>
+      <hr style="width:200px" class="w3-opacity">
+      
+      <br>
+  
+      <form action="<?php $_SERVER['PHP_SELF'] ?>" method="post" autocomplete="off">
+        <p><input class="w3-input w3-padding-16" type="text" placeholder="Titolo" name="titolo"></p>
+        <p><input class="w3-input w3-padding-16" type="text" placeholder="Autore" name="autore"></p>
+        <p><input class="w3-input w3-padding-16" type="text" placeholder="Album" name="album"></p>
+        <p><input class="w3-input w3-padding-16" type="text" placeholder="Anno" name="anno" maxlength="4"></p>
+        <p>
+          <button class="w3-button w3-light-grey w3-padding-large" type="submit" name="cerca">
+            <i class="fa fa-search"></i> CERCA
+          </button>
+          <button class="w3-button w3-light-grey w3-padding-large" type="reset">
+            <i class="fa fa-trash-o" aria-hidden="true"></i> CANCELLA
+          </button>
+        </p>
+      </form>
+    </div>
 
 <!-- Script PHP che comporrà la query in base alle informazioni del form -->
 <?php
 //qua viene generata la mia query
-if(isset($_POST["cerca"])) {
-  require "database.php";
-  $sql= "SELECT B.id, B.titolo, A.Nome AS autore, B.album, B.anno," .
-   " A.id AS id_aut FROM brani AS B, autori AS A WHERE B.id=A.id AND ";
-  $cont=0;
-  $titolo=strtolower($_POST["titolo"]);
-  $autore=strtolower($_POST["autore"]);
-  $album=strtolower($_POST["album"]);
-  $anno=$_POST["anno"];
-  if(!empty($titolo)) {
-    $sql.="B.titolo LIKE '%$titolo%' ";
-    $cont++;
-  }
-  if(!empty($autore)) {
-    if($cont==0) {
-        $sql.="A.Nome LIKE '%$autore%' ";
-        $cont++;
-    } else {
-        $sql.="AND A.Nome LIKE '%$autore%' ";
-        $cont++;
+if(isset($_POST["cerca"]))
+  {
+    require "database.php";
+    $sql= "SELECT B.id, B.titolo, A.Nome AS autore, B.album, B.anno, A.id AS id_aut FROM brani AS B, autori AS A WHERE B.id=A.id AND ";
+    $cont=0;
+    $titolo=strtolower($_POST["titolo"]);
+    $autore=strtolower($_POST["autore"]);
+    $album=strtolower($_POST["album"]);
+    $anno=$_POST["anno"];
+    if(!empty($titolo))
+    {
+    	$sql.="B.titolo LIKE '%$titolo%' ";
+    	$cont++;
     }
-  }
-  if(!empty($album)) {
-    if($cont==0) {
-      $sql.="B.album LIKE '%$album%'";
-      $cont++;
-    } else {
-      $sql.="AND B.album LIKE '%$album%' ";
-      $cont++;
+    if(!empty($autore))
+    {
+    	if($cont==0)
+        {
+    	    $sql.="A.Nome LIKE '%$autore%' ";
+    	    $cont++;
+    	}
+        else
+        {
+    	    $sql.="AND A.Nome LIKE '%$autore%' ";
+    	    $cont++;
+    	}
     }
-  }
-  if(!empty($anno)) {
-    if($cont==0) {
-      $sql.="B.anno LIKE '%$anno%' ";
-      $cont++;
-    } else {
-      $sql.="AND B.anno LIKE '%$anno%' ";
-      $cont++;
+    if(!empty($album))
+    {
+    	if($cont==0)
+        {
+	    $sql.="B.album LIKE '%$album%'";
+	    $cont++;
+	}
+        else
+        {
+            $sql.="AND B.album LIKE '%$album%' ";
+	    $cont++;
+	}
     }
-  }
-  //viene interrogato il database
-  $query=mysqli_query($conn, $sql) or die("Errore nella connessione con il Database");
-  
-  echo '<div><h2>Risultati</h2><hr><br>';
-  
-  //per ogni risultato si compongono frammenti HTML per la visualizzazione
-  if(mysqli_affected_rows($conn)>0) {
-    while($riga=mysqli_fetch_array($query)) {
-      echo '<p>';
-      echo '<a href="schedabrano.php?id='.$riga["id"].'"><span>'.$riga["titolo"].'</span></a>';
-      echo '&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp';
-      echo '<a href="schedaautore.php?id='.$riga["id_aut"].'><span>'.$riga["autore"].'</span></a>';
-      echo '&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp';
-      echo $riga["album"];
-      echo '&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp';
-      echo $riga["anno"];        
-      echo '</p>';    
+    if(!empty($anno))
+    {
+	if($cont==0)
+        {
+	    $sql.="B.anno LIKE '%$anno%' ";
+	    $cont++;
+	}
+        else
+        {
+	    $sql.="AND B.anno LIKE '%$anno%' ";
+	    $cont++;
+	}
     }
-  }
-  else
-    echo "<p>Nessun risultato.</p>";
-}?>
+    //viene interrogato il database
+    $query=mysqli_query($conn, $sql) or die("Errore nella connessione con il Database");
+    
+    
+    echo '<div class="w3-content w3-justify w3-text-grey w3-padding-64">
+    <h2 class="w3-text-light-grey">Risultati</h2>
+    <hr style="width:200px" class="w3-opacity"><br>';
+        
+    
+    
+    //per ogni risultato si compongono frammeenti HTML per la visualizzazione
+    if(mysqli_affected_rows($conn)>0)
+    {
+        while($riga=mysqli_fetch_array($query))
+        {
+            echo '<p>';
+            echo '<a href="schedabrano.php?id='.$riga["id"].'" style="text-decoration:none"><span class="w3-large w3-text-light-grey w3-margin-right">'.$riga["titolo"].'</span></a>';
+            echo '&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp';
+            echo '<a href="schedaautore.php?id='.$riga["id_aut"].'" style="text-decoration:none"><span class="w3-large w3-text-light-grey w3-margin-right">'.$riga["autore"].'</span></a>';
+            echo '&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp';
+            echo $riga["album"];
+            echo '&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp';
+            echo $riga["anno"];        
+            echo '</p>';
+            
+        }
+    }
+    else
+        echo "<p>Nessun risultato.</p>";
+    
+  }?>
+  <br><br>
 
-<!-- ... -->
+</div>
 
 </body>
 </html>
@@ -621,7 +685,6 @@ if(isset($_POST["cerca"])) {
 
 Gli admin hanno la possibilità di aggiungere brani. Questo è possibile tramite l'apposita pagina composta da un form in cui è possibile inserire tutti i dettagli del brano. Inoltre è predisposta una una sezione dove è possibile effettuare l'upload del brano.
 
-<div style="page-break-after: always; break-after: page;"></div>
 
 ## Prova dello sniffer
 
